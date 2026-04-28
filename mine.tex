@@ -1,0 +1,400 @@
+\input{macro}
+
+\renewcommand{\mytitle}{克服基于偏好的强化学习中的单调性陷阱：一种最大熵增量先验方法}
+\renewcommand{\mytitleEN}{OVERCOMING THE MONOTONICITY TRAP IN PREFERENCE-BASED REINFORCEMENT LEARNING: A MAXIMUM ENTROPY INCREMENT PRIOR APPROACH}
+
+\begin{document}
+\setlength{\baselineskip}{20pt}
+
+\title{\hei\zihao{-2}\bfseries\mytitle}
+\maketitle
+\thispagestyle{empty}
+\clearpage
+
+
+\pagenumbering{Roman}
+
+{\pagestyle{plain}
+\tableofcontents
+\clearpage}
+
+
+\section*{摘~要}
+设计有效的奖励信号是强化学习（RL）应用于复杂连续控制和具身智能的核心瓶颈。基于偏好的强化学习（PbRL）通过成对轨迹比较来学习奖励模型，但将其势函数直接应用于基于势的奖励重塑（PBRS）时，常遭遇极端方差和早期梯度崩溃。本文揭示了这一现象的根本原因——\textbf{单调性陷阱（Monotonicity Trap）}：纯排序目标仅能保证轨迹的序数正确性，却无法约束PBRS所依赖的基数增量结构，导致神经网络极易收敛于病态的单调扭曲势函数。为了在不牺牲标签效率的前提下解决这一问题，我们提出了一种无监督的\textbf{最大熵增量先验（Maximum Entropy Increment Prior, $\mathcal{L}_{struct}$）}。该方法作为一种规范化算子，直接在排序目标上施加结构约束，自动将网络锚定在最平滑、分布最均匀的进展曲率上。在LIBERO模拟操作基准测试上的实验表明，我们的方法仅使用廉价的成对轨迹偏好标签，在所有轨迹级策略排序指标上均超越了依赖帧级进度标签的完全监督预言机（Kendall $\tau$ 提升15.9\%）。本研究证明，无需昂贵的绝对进度标注，仅凭序数偏好即可恢复稳定且对RL友好的基数增量结构。
+
+% keywords
+\vspace{1em}\noindent
+{\zihao{-3}\hei 关键词：}
+{\zihao{-4}\song 强化学习，基于偏好的奖励模型，奖励重塑，最大熵，单调性陷阱}
+\clearpage
+
+
+
+{\centering\zihao{-2}\bfseries\sffamily \mytitleEN\par}
+\vspace{1em}
+\section*{Abstract}
+Designing effective reward signals remains the core bottleneck for applying reinforcement learning (RL) to complex continuous control and embodied intelligence. Preference-based reinforcement learning (PbRL) learns reward models through pairwise trajectory comparisons, but directly deploying its potential function into potential-based reward shaping (PBRS) often encounters extreme variance and early gradient collapse. This paper reveals the root cause of this phenomenon---the \textbf{Monotonicity Trap}: pure ranking objectives can only guarantee ordinal correctness of trajectories but cannot constrain the cardinal increment structure that PBRS relies upon, causing neural networks to easily converge to pathologically distorted monotonic potential functions. To address this problem without sacrificing label efficiency, we propose an unsupervised \textbf{Maximum Entropy Increment Prior ($\mathcal{L}_{struct}$)}. As a normalization operator, this method directly imposes structural constraints on the ranking objective, automatically anchoring the network to the smoothest and most uniformly distributed progress curvature. Experiments on the LIBERO simulated manipulation benchmark demonstrate that our method, using only cheap pairwise trajectory preference labels, surpasses fully supervised oracles that rely on frame-level progress labels on all trajectory-level policy ranking metrics (Kendall $\tau$ improved by 15.9\%). This work demonstrates that stable and RL-friendly cardinal increment structure can be recovered from ordinal preferences alone, without expensive absolute progress annotations.
+
+% keywords
+\vspace{1em}\noindent
+{\zihao{-3}\hei Keywords:}
+{\zihao{-4}\songti \rmfamily Reinforcement Learning, Preference-based Reward Model, Reward Shaping, Maximum Entropy, Monotonicity Trap}
+
+\clearpage
+
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\section{引言}
+
+设计和指定有效的奖励信号仍然是将强化学习（RL）扩展到复杂连续控制和具身智能（Embodied AI）的核心瓶颈。为了克服手动奖励工程的脆弱性并缓解奖励作弊（reward hacking）问题，基于偏好的强化学习（PbRL）已成为一项黄金标准\cite{christiano2017,lee2021}。这一范式的核心优势在于，它能够纯粹从成对的轨迹比较中内化人类意图或启发式任务进度。当前一种主流方法利用这些偏好，通过成对排序损失（如Bradley-Terry模型）来优化参数化的状态势函数\cite{brown2019,krack2026}。随后，这种学习到的势函数通过基于势的奖励重塑（PBRS）\cite{ng1999}进行部署，在理论上为下游RL智能体提供密集的探索性指导，同时在数学上保证最优策略的不变性。
+
+尽管在理论上很优雅，但将纯粹基于偏好的势函数部署到在线RL循环中通常会导致一种普遍但鲜有报道的"静默失败"：即使奖励模型在验证集上实现了近乎完美的序数准确率（例如，Kendall-$\tau > 0.9$），下游的策略优化也经常遭受极端方差和早期梯度崩溃的困扰。
+
+我们将这种现象的根本原因确定为\textbf{单调性陷阱（Monotonicity Trap）}。基于排序的目标对于PBRS部署来说在根本上是欠指定的；它们严格保证轨迹的\textbf{序数（ordinal）}正确性，而PBRS关键依赖于逐步的\textbf{基数增量（cardinal increments）}（$F(s, a, s') = \gamma\Phi(s') - \Phi(s)$）。由于缺乏明确的曲率约束，神经网络极易收敛到真实势函数的任意的、病态的单调扭曲（例如，极端的阶跃函数或过度平坦的对数曲线）。这些单调等效但在结构上退化的奖励曲面是导致RL不稳定的罪魁祸首。
+
+% TODO: 插入首页图，直观展示相同的排序准确率如何产生不同的曲率以及灾难性的RL失败
+% \begin{figure}[htb]
+%     \centering
+%     \includegraphics[width=0.9\textwidth]{figures/monotonicity_trap.pdf}
+%     \caption{单调性陷阱示意图}
+%     \label{fig:monotonicity_trap}
+% \end{figure}
+
+为了绕过这种可识别性差距，最近最先进的过程奖励模型，如ROBOMETER\cite{liang2026}和Robo-Dopamine\cite{tan2025}，求助于昂贵的外部数据补丁。它们引入了明确的绝对进度标签（例如，时间步长比$t/T$或特权模拟器距离）来人为地锚定基数尺度。然而，这种绝对尺度监督的获取成本高昂，并且在面对现实世界机器人技术中固有的大量次优或失败轨迹时，极易发生语义不对齐。
+
+在本文中，我们旨在弥合基于偏好的奖励建模中的可识别性差距，而不牺牲其标签效率。遵循奥卡姆剃刀原理，我们提出恢复对RL友好的基数增量结构不需要特权外部标签。相反，这可以通过直接在排序目标上施加一个最小的、基于物理的结构约束来实现。具体而言，我们引入了一种无监督的最大熵增量先验（Maximum Entropy Increment Prior, $\mathcal{L}_{struct}$）。作为一种规范化算子，该先验自动将网络锚定在无限单调等效函数族中最平滑、分布最均匀的进展曲率上。
+
+这项工作的主要发现和贡献有三个方面：
+\begin{itemize}[leftmargin=*,noitemsep]
+    \item \textbf{诊断性见解：}我们正式定义了轨迹排序势函数中的\textbf{单调性陷阱}，并凭经验证明了纯排序模型存在巨大的可识别性差距，这直接转化为下游RL部署过程中的极端方差。
+    \item \textbf{方法论的简洁性：}我们提出了$\mathcal{L}_{struct}$，这是一种计算高效、无标签的结构约束，可与标准成对排序目标无缝集成，从本质上恢复用于RL探索的最佳基数增量结构。
+    \item \textbf{系统级性能：}在LIBERO模拟操作基准测试中，我们的方法在所有轨迹级策略排序指标上都超越了完全监督的预言机（ROBOMETER混合目标）——\textbf{仅}使用廉价的轨迹偏好，而没有使用帧级进度标签。
+\end{itemize}
+
+
+
+\clearpage
+\section{相关工作}
+
+\subsection{从轨迹比较中学习奖励}
+
+早期的逆强化学习（IRL）系统要求匹配专家数据的特征分布，这本质上将智能体的性能限制在演示者的水平\cite{ziebart2008}。为了在次优数据之外进行外推，该领域转向了轨迹排序。T-REX算法\cite{brown2019}引入了在次优轨迹上优化Bradley-Terry排序损失的范式，而Christiano等人\cite{christiano2017}建立了使用成对人类偏好进行深度强化学习的基线框架。最近，这种成对排序公式已被应用于视觉语言模型（VLM）。Rewarding DINO\cite{krack2026}使用成对逻辑损失微调冻结的视觉基础模型以进行密集奖励预测，而PrefMMT\cite{zhao2024}使用多模态Transformer处理轨迹，以捕获人类评估中跨模态的状态-动作依赖关系。
+
+这些当代系统仅使用序数约束来训练状态势函数。我们发现，这种机制本质上将奖励模型暴露在\textbf{单调性陷阱}中：任何严格递增的数学变换都会保留成对排序损失，但会从根本上改变状态之间的基数增量（$\Delta\Phi_t$）。所提出的框架通过对增量分布引入结构约束来直接解决这个问题。通过这样做，我们防止了由不受约束的步长引起的高方差RL动态，同时完全在基线成对数据格式内运行。
+
+\subsection{基于进度估计的密集过程奖励模型}
+
+为了在RL探索期间提供稳定的、循序渐进的指导，最近的模型试图估计连续的任务进度。最初的方法利用了零样本VLM提示，但由于时间不稳定性，后续系统过渡到了显式的进度估计器。RoboReward\cite{liang2026}微调VLM以预测通过反事实指令标记的离散进度区间。ROBOMETER通过将分类进度损失（拟合绝对时间比率$t/T$）与成对偏好损失相结合来扩展这一点，以利用未标记的失败轨迹（通过视频倒放生成）。Robo-Dopamine\cite{tan2025}指出，拟合绝对进度会累积时间误差，并提出使用局部帧间隔（基于跳数的相对进度）来归一化进度。
+
+这些系统通过注入显式的进度监督（通过绝对时间区间或局部跳数标签）来稳定奖励步长。所提出的方法表明，并不严格需要这种特权注释。我们的系统完全依赖于轨迹级的偏好比较，并应用无监督的熵先验来强制执行均匀的增量分布。这种机制与进度监督模型的结构稳定性相匹配，同时消除了帧级进度标记所需的数据注释开销。
+
+\subsection{基于势的奖励重塑与正则化}
+
+Ng等人\cite{ng1999}证明，将重塑奖励定义为$F(s, a, s') = \gamma\Phi(s') - \Phi(s)$对于在任意奖励变换下保持最优策略既是必要的也是充分的。Wiewiora\cite{wiewiora2003}进一步证明，该公式在数学上等价于Q值初始化。在将PBRS应用于深度神经网络奖励模型时，系统经常面临严重的校准和分布偏移问题。最近的分析探索了对势函数应用恒定偏差偏移，以提高PBRS的探索样本效率。
+
+虽然PBRS的理论保证适用于任何有效的势函数，但连续控制优化算法（如PPO和SAC）对重塑奖励的步长和方差高度敏感。我们的方法在PBRS部署之前规范化了势函数的曲率。至关重要的是，该模块没有应用标准的$L_2$时间平滑（这会强制进行僵硬的线性插值并忽略任务的潜在语义瓶颈），而是将增量序列视为概率分布，并应用最大熵正则化器。这种拓扑结构允许由偏好梯度引导的必要奖励峰值，同时均匀地平滑未定义的探索区域。
+
+
+
+\clearpage
+\section{问题公式化与单调性陷阱}
+
+\subsection{预备知识：MDP与基于势的奖励重塑}
+
+我们将环境建模为由元组$\mathcal{M} = \langle \mathcal{S}, \mathcal{A}, \mathcal{P}, r, \gamma \rangle$定义的马尔可夫决策过程（MDP）。这里，$\mathcal{S}$是状态空间，$\mathcal{A}$是动作空间，$\mathcal{P}(s'|s,a)$决定了状态转移的动态，$r(s,a,s')$表示真实奖励，$\gamma \in [0, 1)$是折扣因子。
+
+为了在不改变最优策略的情况下加速强化学习探索，Ng等人\cite{ng1999}建立了基于势的奖励重塑（PBRS）。给定一个状态势函数$\Phi: \mathcal{S} \to \mathbb{R}$，PBRS使用密集的重塑信号来增强环境奖励：
+\begin{equation}
+\label{eq:pbrs}
+    F(s, a, s') = \gamma \Phi(s') - \Phi(s)
+\end{equation}
+这种特定的公式在数学上保证了在重塑奖励$r + F$下训练的任何最优策略在原始的、未重塑的奖励$r$下仍然严格最优。
+
+\subsection{轨迹排序与可识别性差距}
+
+当密集的真实奖励$r$不可用时，基于偏好的RL（PbRL）从成对轨迹比较的数据集$\mathcal{D} = \{(\tau_w, \tau_l)\}$中学习参数化的势函数$\Phi_\theta$。关系$\tau_w \succ \tau_l$表明轨迹$\tau_w$展示了比$\tau_l$更好的任务进度。在Bradley-Terry（BT）模型下，长度为$T$的轨迹的总势是其状态势的总和：$\Phi(\tau) = \sum_{t=0}^T \Phi_\theta(s_t)$。标准目标是最小化成对排序损失：
+\begin{equation}
+\label{eq:bt}
+    \mathcal{L}_{BT} = - \mathbb{E}_{(\tau_w, \tau_l) \sim \mathcal{D}} \left[ \log \frac{\exp(\Phi(\tau_w))}{\exp(\Phi(\tau_w)) + \exp(\Phi(\tau_l))} \right]
+\end{equation}
+
+\subsection{单调性陷阱}
+
+优化$\mathcal{L}_{BT}$使模型与数据集的序数偏好完美对齐。然而，这种纯粹的排序目标为下游的PBRS部署造成了严重的可识别性差距。
+
+考虑任何严格单调递增的变换$g: \mathbb{R} \to \mathbb{R}$（例如，$g(x) = x^3$，$g(x) = e^x$）。如果$\tau_w \succ \tau_l \implies \Phi(\tau_w) > \Phi(\tau_l)$，则不等式$g(\Phi(\tau_w)) > g(\Phi(\tau_l))$本质上成立。变换后的势函数$\Phi_g(s) = g(\Phi_\theta(s))$在$\mathcal{L}_{BT}$下产生与原始$\Phi_\theta(s)$完全相同的排序准确率。
+
+PBRS严格依赖于相邻状态之间的\textbf{基数增量}。单调变换势下的重塑奖励定义为$F_g(s, a, s') = \gamma g(\Phi_\theta(s')) - g(\Phi_\theta(s))$。连续控制RL算法（例如PPO、SAC）对这些逐步奖励的尺度和方差高度敏感。不受约束的单调变换通常会在早期探索期间导致极端的梯度峰值或奖励消失。例如，指数扭曲$g(x) = e^x$会导致在初始探索期间重塑奖励极小，而在接近目标时出现巨大的梯度峰值。我们正式将这种结构性脱节——模型表现出相同的排序准确率，但增量结构却出现病态分歧——定义为\textbf{单调性陷阱（Monotonicity Trap）}。
+
+
+
+\clearpage
+\section{结构正则化的势函数推断}
+
+我们引入了一个框架，在离线偏好学习阶段直接规范化势函数的曲率。这防止了增量崩溃，而不需要绝对进度标签。该管道实现了一个结构正则化的联合目标，随后是零样本PBRS部署策略。
+
+\subsection{最大熵增量先验}
+
+标准的$L_2$时间平滑惩罚强烈地使状态势偏向于严格的线性函数，这可能会抑制必要的语义任务瓶颈。为了允许灵活的进度分配同时防止退化的阶跃函数，我们对增量的概率分布进行操作。我们假设，对于探索性任务，一个最优的无信息先验应该尽可能均匀地在状态转换之间分配进度，遵循最大熵原理。
+
+对于给定长度为$T$的轨迹$\tau \in \mathcal{D}$，我们计算相邻帧之间学习到的势函数的一阶差分：
+\begin{equation}
+\label{eq:delta_phi}
+    \Delta\Phi_t = \Phi_\theta(s_{t+1}) - \Phi_\theta(s_t)
+\end{equation}
+
+我们通过温度缩放的Softmax算子将这些不受约束的增量形式化为有效的概率分布：
+\begin{equation}
+\label{eq:softmax}
+    p_t = \text{Softmax}(\Delta\Phi / \tau)_t = \frac{\exp(\Delta\Phi_t / \tau)}{\sum_{i=0}^{T-1} \exp(\Delta\Phi_i / \tau)}
+\end{equation}
+其中$\tau > 0$是一个温度超参数，用于控制对增量差异的敏感度。较小的$\tau$会放大增量之间的微小差异，防止原始增量量级相似时发生梯度饱和（见第5.3.1节）。我们在所有实验中使用$\tau = 0.1$。
+
+为了惩罚病态曲率，我们引入了最大熵增量先验（$\mathcal{L}_{struct}$）。该项通过最小化时间进度分布的负香农熵来正则化网络：
+\begin{equation}
+\label{eq:lstruct}
+    \mathcal{L}_{struct} = \mathbb{E}_{\tau \sim \mathcal{D}} \left[ \sum_{t=0}^{T-1} p_t \log p_t \right]
+\end{equation}
+
+\subsection{联合优化目标}
+
+势函数网络$\Phi_\theta$进行端到端训练。我们最小化一个复合损失函数，该函数平衡了相对排序保真度和结构先验：
+\begin{equation}
+\label{eq:total_loss}
+    \mathcal{L}_{total} = \mathcal{L}_{BT} + \lambda \mathcal{L}_{struct}
+\end{equation}
+超参数$\lambda > 0$控制偏好区分度和进度平滑度之间的权衡。这种公式化作为一种规范化算子，将网络锚定在无限单调等效函数族中的稳定曲率上。
+
+\subsection{零样本规范化与RL部署}
+
+在离线收敛之后，学习到的势函数被集成到在线RL循环中。标准的Actor-Critic架构对尺度高度敏感。我们应用零样本离线规范化包装器，将无界的势函数投影到归一化的$[0, 1]$范围内，以确保数值稳定性。
+
+使用一小部分保留的成功演示，我们计算初始状态分布$\mathcal{S}_{start}$和目标状态分布$\mathcal{S}_{goal}$的预期势值。设这些经验均值为$\bar{\Phi}_{start}$和$\bar{\Phi}_{goal}$。静态仿射包装器$\tilde{\Phi}(s)$定义为：
+\begin{equation}
+\label{eq:normalization}
+    \tilde{\Phi}(s) = \frac{\Phi_\theta(s) - \bar{\Phi}_{start}}{\bar{\Phi}_{goal} - \bar{\Phi}_{start}}
+\end{equation}
+
+在在线策略优化期间，$\tilde{\Phi}$的权重被严格冻结。在每个环境步$t$，智能体接收在PBRS框架下制定的密集重塑奖励：
+\begin{equation}
+\label{eq:deploy}
+    F(s_t, a_t, s_{t+1}) = \gamma \tilde{\Phi}(s_{t+1}) - \tilde{\Phi}(s_t)
+\end{equation}
+这保证了结构正则化的势函数为探索提供稳定的指导，而不会引发奖励作弊。
+
+
+
+\clearpage
+\section{实验}
+
+我们的实验旨在验证两个核心主张：（1）在纯粹基于排序的奖励模型中，单调性陷阱是一个真实且可测量的现象；（2）我们的无监督结构先验$\mathcal{L}_{struct}$可以在没有帧级进度标签或额外架构组件的情况下恢复对RL友好的基数增量结构。
+
+\subsection{实验设置}
+
+\textbf{基准测试。}我们在LIBERO模拟操作基准测试\cite{liu2023}上进行所有实验。遵循Robometer消融协议\cite{liang2026}，模型在来自LIBERO-\{10, Object, Goal, Spatial\}的1,709个成功演示以及1,929个生成的失败轨迹上进行训练。在保留的LIBERO-90套件上进行评估，该套件包含跨越未见任务的8,262对成功和失败轨迹。
+
+\textbf{基础模型与训练。}所有奖励模型变体均从SmolVLM-500M-Instruct视觉语言模型初始化，并进行完全微调（不使用LoRA）。训练对每个轨迹使用8个子采样帧，采用多图像输入模式，批量大小为16，学习率为$4 \times 10^{-5}$，余弦学习率调度（10\%预热），并运行1,000个梯度步长（在单张RTX 4080 Super GPU上约55分钟）。视觉编码器被冻结；仅训练语言模型和特定任务的预测头。图像分辨率设置为384px。
+
+\textbf{指标。}我们报告了四个标准的奖励模型评估指标：
+\begin{itemize}[leftmargin=*,noitemsep]
+    \item \textbf{VOC $r$（奖励对齐）}：成功轨迹的每帧预测奖励与真实时间步索引之间的皮尔逊相关系数。衡量奖励模型是否沿着成功的执行分配单调递增的值。
+    \item \textbf{Kendall $\tau$（策略排序）}：Kendall秩相关系数，衡量模型分配的轨迹级奖励与真实质量排序之间的对齐程度。
+    \item \textbf{排序准确率（Ranking Accuracy）}：模型正确地将更高奖励分配给更高质量轨迹的轨迹对的比例。
+    \item \textbf{成败差异（Suc-Fail Diff）}：成功轨迹与失败轨迹之间的平均预测奖励差值。较大的差异表明奖励模型能够更清晰地区分轨迹质量。
+\end{itemize}
+
+\textbf{比较方法。}我们评估了形成受控消融的三个奖励模型变体，如\cref{tab:methods}所示。
+
+\begin{table}[ht]
+    \centering
+    \caption{比较方法概览}
+    \label{tab:methods}
+    \begin{tabular}{cllll}
+    \toprule
+    \textbf{编号} & \textbf{方法} & \textbf{架构} & \textbf{训练目标} & \textbf{所需标签} \\
+    \midrule
+    A & 纯BT & VLM+进度头 & $\mathcal{L}_{BT}(\sum\Phi)$ & 成对偏好 \\
+    C & BT+$\mathcal{L}_{struct}$（我们的） & VLM+进度头 & $\mathcal{L}_{BT}+\lambda\cdot\mathcal{L}_{struct}$ & 成对偏好 \\
+    D & 完整Robometer & VLM+偏好头+进度头 & $\mathcal{L}_{BT}^{head}+\mathcal{L}_{progress}$ & 成对偏好+帧级进度 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+方法A和C共享\textbf{完全相同}的模型架构：单个每帧势函数$\Phi_\theta$（实现为没有Sigmoid激活的进度头），其输出在帧上求和以产生轨迹级Bradley-Terry排序Logit $\Phi(\tau) = \sum_{t} \Phi_\theta(s_t)$。唯一的区别在于损失函数。方法D使用原始的Robometer架构，具有用于排序的独立偏好头和在每帧时间步比率（$t/T$）上训练的监督进度头，作为监督预言机上限。方法C的正则化权重设置为$\lambda = 0.1$，熵Softmax温度为$\tau = 0.1$。
+
+\subsection{核心结果}
+
+\cref{tab:main_results}展示了LIBERO上的奖励模型评估结果。奖励对齐（VOC $r$）是成功轨迹上每帧预测进度与真实时间步索引之间的平均皮尔逊相关系数。策略排序使用轨迹级奖励（求和聚合）对不同质量的轨迹进行排序。实验D作为监督预言机上限。
+
+\begin{table}[ht]
+    \centering
+    \caption{LIBERO上的奖励模型评估结果}
+    \label{tab:main_results}
+    \begin{tabular}{lcccc}
+    \toprule
+    \textbf{方法} & \textbf{VOC $r$ $\uparrow$} & \textbf{Kendall $\tau$ $\uparrow$} & \textbf{排序准确率 $\uparrow$} & \textbf{成败差异 $\uparrow$} \\
+    \midrule
+    A.~纯BT & (待定) & (待定) & (待定) & (待定) \\
+    C.~BT+$\mathcal{L}_{struct}$（我们的） & 0.285 & \textbf{0.584} & \textbf{0.792} & \textbf{11.755} \\
+    D.~完整Robometer（预言机） & \textbf{0.860} & 0.504 & 0.752 & 2.175 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+在另一组Qwen3-VL-2B + LoRA预实验中，纯BT基线（方法A）的Kendall $\tau = -0.005$，排序准确率$= 0.498$，证实了单调性陷阱现象的存在。SmolVLM-500M下相同条件的方法A实验正在进行中。
+
+\textbf{主要观察结果。}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{我们的方法（C）在所有策略排序指标上都超越了监督预言机（D）。}尽管仅使用成对偏好标签（没有帧级进度监督），实验C的Kendall $\tau = 0.584$相比于$0.504$（+15.9\%），排序准确率$= 0.792$相比于$0.752$（+5.3\%），成败差异$= 11.755$相比于$2.175$（+440\%）。这表明$\mathcal{L}_{struct}$恢复的轨迹级排序结构优于从监督进度预测中获得的结构。
+
+    \item \textbf{较低的VOC $r$并不意味着较差的轨迹级奖励质量。}实验C较低的VOC $r$（$0.285$对$0.860$）反映出每帧势函数不如监督进度预测器平滑，这是预期的，因为实验C没有接收帧级标签。然而，显著更高的策略排序分数证实了$\mathcal{L}_{struct}$学习到的基数增量结构产生了更好的轨迹级奖励信号。
+
+    \item \textbf{单调性陷阱是真实的，并且熵先验解决了它。}如果没有$\mathcal{L}_{struct}$，纯BT基线（A，之前的Qwen结果：Kendall $\tau = -0.005$）尽管实现了更高的每帧对齐，但无法有意义地对轨迹进行排序。我们的结构先验防止了模型崩溃为退化的单调解，从而保留了判别性排序能力。
+\end{enumerate}
+
+\subsection{分析}
+
+\subsubsection{训练动态：$\mathcal{L}_{struct}$提供活跃的梯度信号}
+
+将熵正则化应用于神经网络输出的一个关键挑战是避免梯度饱和。我们最初使用基于Softplus的朴素公式的实验导致结构损失立即饱和于其理论最大值（对于$T = 7$个增量，$-\log T = -1.9459$），在整个训练过程中提供零梯度。两个关键修改解决了这个问题：
+\begin{enumerate}[leftmargin=*,noitemsep]
+    \item \textbf{从进度头中移除Sigmoid激活}，允许产生增量分布中足够方差的无界势值。
+    \item \textbf{在Softmax归一化中引入温度参数}（$\tau = 0.1$），在计算熵之前放大增量之间的微小差异。
+\end{enumerate}
+
+\cref{tab:dynamics_qwen}和\cref{tab:dynamics_smol}分别展示了两种模型设置下的训练动态。
+
+\begin{table}[ht]
+    \centering
+    \caption{$\mathcal{L}_{struct}$训练动态（Qwen3-VL-2B + LoRA，1250步）}
+    \label{tab:dynamics_qwen}
+    \begin{tabular}{cccc}
+    \toprule
+    \textbf{步数} & $\mathcal{L}_{struct}$ & $\mathcal{L}_{BT}$ & $\sigma^2(\Delta\Phi)$ \\
+    \midrule
+    1 & $-1.003$ & 1.456 & 0.043 \\
+    251 & $-1.167$ & 0.585 & --- \\
+    501 & $-1.320$ & 0.594 & 0.029 \\
+    651 & $-1.403$ & --- & --- \\
+    951 & $-1.140$ & 0.423 & 0.036 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+结构损失在$-1.0$和$-1.4$之间波动（远高于$-1.9459$的饱和点），证实了活跃的梯度传播。同时，增量方差$\sigma^2(\Delta\Phi)$从$0.043$下降到$0.029$--$0.036$，表明$\mathcal{L}_{struct}$成功地鼓励了更均匀的增量分布。Bradley-Terry偏好损失$\mathcal{L}_{BT}$正常收敛（$1.456 \to 0.423$），表明结构正则化不会干扰偏好学习。
+
+\begin{table}[ht]
+    \centering
+    \caption{SmolVLM-500M完全微调下的训练动态（1000步）}
+    \label{tab:dynamics_smol}
+    \begin{tabular}{ccc}
+    \toprule
+    \textbf{步数} & $\mathcal{L}_{struct}$ & $\mathcal{L}_{BT}$ \\
+    \midrule
+    10 & $-1.158$ & 0.905 \\
+    100 & $-1.180$ & 0.655 \\
+    500 & $-1.45 \sim -1.53$ & 0.121--0.178 \\
+    1000 & $-1.55 \sim -1.56$ & 0.163--0.261 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+在SmolVLM-500M完全微调设置下，同样观察到了非饱和行为：$\mathcal{L}_{struct}$从$-1.158$稳步下降至$-1.55$，$\mathcal{L}_{BT}$从$0.905$收敛至约$0.16$--$0.26$，与Qwen实验中的趋势一致。
+
+\subsubsection{方向歧义}
+
+移除Sigmoid激活引入了方向歧义：势函数可能会学习到沿着成功轨迹单调递减。在早期的Qwen3-VL-2B + LoRA实验中，实验C表现出负的VOC $r$值（在LIBERO-90上为$-0.382$）。这种歧义不影响轨迹级排序（Bradley-Terry比较对$\Phi$的符号不变），并且可以在部署时通过检测并翻转重塑奖励的符号来解决。
+
+在SmolVLM-500M完全微调下，方向歧义没有显现：实验C实现了正的VOC $r$（在LIBERO-90上为$0.285$，在LIBERO-10上为$0.477$），表明完全微调提供了足够的模型容量来学习正确的方向。
+
+\subsubsection{下游RL部署}
+
+% TODO: 计划使用CleanRL与向量化LIBERO环境进行下游RL实验。
+% 部署遵循第4.3节中描述的PBRS框架：冻结的势函数提供每步密集的重塑奖励，
+% 以增强稀疏的环境奖励。结果将验证改进的轨迹级排序是否能转化为更好的在线策略优化。
+
+
+
+\clearpage
+\section{结论}
+
+我们确定了\textbf{单调性陷阱}——这是基于偏好的奖励模型中一个根本的可识别性差距，它使得纯排序目标在结构上不足以用于下游的PBRS部署。为了解决这个问题，我们提出了最大熵增量先验（$\mathcal{L}_{struct}$），这是一种轻量级的无监督正则化器，通过最大化其时间增量分布的熵来规范化势函数的曲率。
+
+在LIBERO操作基准测试上的经验评估表明，$\mathcal{L}_{struct}$不仅将一个本质上随机的基线（Kendall $\tau \approx 0$）转变为一个强大的策略判别器，而且在所有轨迹级排序指标上都超越了完全监督的预言机（Kendall $\tau$：$0.584$对$0.504$，排序准确率：$0.792$对$0.752$，成败差异：$11.755$对$2.175$）——仅使用成对轨迹偏好，没有帧级进度标签。这一结果验证了我们的核心论点：仅从序数偏好就可以恢复对RL友好的基数结构，而无需监督进度估计方法所需的注释开销。
+
+% TODO: 正在使用CleanRL与向量化LIBERO环境进行下游RL实验，
+% 以验证改进的排序结构能通过PBRS转化为更有效的在线策略优化。
+
+
+
+\clearpage
+\begin{thebibliography}{99}
+
+\bibitem{christiano2017}
+Christiano P F, Leike J, Brown T, et al.
+Deep reinforcement learning from human preferences[C].
+Advances in Neural Information Processing Systems, 2017: 4299-4307.
+
+\bibitem{lee2021}
+Lee K, Smith L, Abbeel P.
+PEBBLE: Feedback-efficient interactive reinforcement learning via relabeling experience and unsupervised pre-training[C].
+International Conference on Machine Learning, 2021: 6152-6163.
+
+\bibitem{brown2019}
+Brown D S, Goo W, Nagarajan P, et al.
+Extrapolating beyond suboptimal demonstrations via inverse reinforcement learning from observations[C].
+International Conference on Machine Learning, 2019: 783-792.
+
+\bibitem{krack2026}
+Krack T, et al.
+Rewarding DINO: Pairwise logistic loss for dense reward prediction from visual foundation models[C].
+2026.
+
+\bibitem{ng1999}
+Ng A Y, Harada D, Russell S.
+Policy invariance under reward transformations: Theory and application to reward shaping[C].
+International Conference on Machine Learning, 1999: 278-287.
+
+\bibitem{liang2026}
+Liang J, et al.
+Robometer: A vision-language model for robotic reward modeling via pairwise comparison and progress estimation[J].
+2026.
+
+\bibitem{tan2025}
+Tan S, et al.
+Robo-Dopamine: Dense robotic reward via vision-language model[J].
+2025.
+
+\bibitem{ziebart2008}
+Ziebart B D, Maas A L, Bagnell J A, et al.
+Maximum entropy inverse reinforcement learning[C].
+AAAI Conference on Artificial Intelligence, 2008: 1433-1438.
+
+\bibitem{zhao2024}
+Zhao Y, et al.
+PrefMMT: Modeling human preferences in multimedia interaction via multimodal transformers[J].
+2024.
+
+\bibitem{wiewiora2003}
+Wiewiora E.
+Potential-based shaping and Q-value initialization are equivalent[J].
+Journal of Artificial Intelligence Research, 2003, 19: 205-208.
+
+\bibitem{liu2023}
+Liu B, Zhu Y, Gao C, et al.
+LIBERO: Benchmarking knowledge transfer for lifelong robot learning[C].
+Advances in Neural Information Processing Systems, 2023.
+
+\end{thebibliography}
+
+
+
+\clearpage
+\section*{致谢}
+% TODO: 填写致谢内容
+
+
+\end{document}

@@ -46,9 +46,9 @@
 % setup style for table of contents
 \usepackage{titletoc}
 \usepackage{tocloft}
-\titlecontents{section}[1em]{\zihao{-4}\heiti\bfseries}{\contentslabel{1em}}{\hspace{-1em}}{\titlerule*[0.5pc]{$.$}\contentspage}
-\titlecontents{subsection}[3em]{\zihao{-4}\songti}{\contentslabel{2em}}{\hspace{-2em}}{\titlerule*[0.5pc]{$.$}\contentspage}
-\titlecontents{subsubsection}[5em]{\zihao{-4}\songti}{\contentslabel{3em}}{\hspace{-3em}}{\titlerule*[0.5pc]{$.$}\contentspage}
+\titlecontents{section}[4em]{\zihao{-4}\heiti\bfseries}{\contentslabel[第\thecontentslabel 章]{4em}}{\hspace{-4em}}{\titlerule*[0.5pc]{$.$}\contentspage}
+\titlecontents{subsection}[4em]{\zihao{-4}\songti}{\contentslabel{2em}}{\hspace{-2em}}{\titlerule*[0.5pc]{$.$}\contentspage}
+\titlecontents{subsubsection}[6.5em]{\zihao{-4}\songti}{\contentslabel{2.5em}}{\hspace{-2.5em}}{\titlerule*[0.5pc]{$.$}\contentspage}
 \renewcommand{\cfttoctitlefont}{\zihao{2}\heiti}
 \renewcommand{\contentsname}{\hfill 目~录\hfill}   
 \renewcommand{\cftaftertoctitle}{\hfill}
@@ -57,9 +57,11 @@
 % update references to Chinese style, font size and type can also be set here
 \usepackage{caption}
 \renewcommand\thesection{\zhnum{section}}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
 \titleformat{\section}{\centering\hei\zihao{-2}}{第\thesection 章}{1em}{}[]
-\titleformat{\subsection}{\hei\zihao{-3}}{\arabic{section}.\arabic{subsection}}{1em}{}[]
-\titleformat{\subsubsection}{\hei\zihao{4}}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}{1em}{}[]
+\titleformat{\subsection}{\hei\zihao{-3}}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}{\hei\zihao{4}}{\thesubsubsection}{1em}{}[]
 \renewcommand{\abstractnamefont}{\hei\zihao{-2}}
 \renewcommand{\abstracttextfont}{}
 % \renewenvironment{abstract}{\begin{center}{\hei\zihao{-2}摘~要}\end{center}\par} \\
