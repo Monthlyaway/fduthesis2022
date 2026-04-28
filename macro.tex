@@ -44,21 +44,20 @@
 
 
 % setup style for table of contents
-\usepackage{titlesec}
 \usepackage{titletoc}
 \usepackage{tocloft}
-\titlecontents{section}[1em]{\zihao{-4}}{\contentslabel{1em}}{\hspace{-1em}}{\titlerule*[0.5pc]{$.$}\contentspage}
-\titlecontents{subsection}[3em]{\zihao{-4}}{\contentslabel{2em}}{\hspace{-2em}}{\titlerule*[0.5pc]{$.$}\contentspage}
-\titlecontents{subsubsection}[5em]{\zihao{-4}}{\contentslabel{3em}}{\hspace{-3em}}{\titlerule*[0.5pc]{$.$}\contentspage}
+\titlecontents{section}[1em]{\zihao{-4}\heiti\bfseries}{\contentslabel{1em}}{\hspace{-1em}}{\titlerule*[0.5pc]{$.$}\contentspage}
+\titlecontents{subsection}[3em]{\zihao{-4}\songti}{\contentslabel{2em}}{\hspace{-2em}}{\titlerule*[0.5pc]{$.$}\contentspage}
+\titlecontents{subsubsection}[5em]{\zihao{-4}\songti}{\contentslabel{3em}}{\hspace{-3em}}{\titlerule*[0.5pc]{$.$}\contentspage}
 \renewcommand{\cfttoctitlefont}{\zihao{2}\heiti}
 \renewcommand{\contentsname}{\hfill 目~录\hfill}   
 \renewcommand{\cftaftertoctitle}{\hfill}
+\setlength{\cftaftertoctitleskip}{20pt}
 
 % update references to Chinese style, font size and type can also be set here
 \usepackage{caption}
-% uncomment this if you want to use "第一章" instead of "第 1 章"
-% \renewcommand\thesection{\zhnum{section}}
-\titleformat{\section}{\centering\hei\zihao{-2}}{第~\thesection~章}{1em}{}[]
+\renewcommand\thesection{\zhnum{section}}
+\titleformat{\section}{\centering\hei\zihao{-2}}{第\thesection 章}{1em}{}[]
 \titleformat{\subsection}{\hei\zihao{-3}}{\arabic{section}.\arabic{subsection}}{1em}{}[]
 \titleformat{\subsubsection}{\hei\zihao{4}}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}{1em}{}[]
 \renewcommand{\abstractnamefont}{\hei\zihao{-2}}
@@ -76,6 +75,7 @@
 
 % title text
 \newcommand{\mytitle}{一种加辣椒的番茄炒蛋}
+\newcommand{\mytitleEN}{A NOVEL APPROACH TO TOMATO SCRAMBLED EGGS WITH CHILI PEPPERS}
 
 % header
 \usepackage{fancyhdr}
@@ -84,6 +84,7 @@
 \fancyhead[R]{\kaishu\zihao{-5}\leftmark}
 \renewcommand\headrulewidth{.5pt}
 \renewcommand\footrulewidth{0pt}
+\renewcommand{\sectionmark}[1]{\markboth{第\thesection 章\quad #1}{}}
 
 % for hype-reference of "section*" to work properly
 \usepackage{xparse}
