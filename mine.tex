@@ -54,13 +54,12 @@ Designing effective reward signals remains the core bottleneck for applying rein
 
 我们将这种现象的根本原因确定为\textbf{单调性陷阱（Monotonicity Trap）}。基于排序的目标对于PBRS部署来说在根本上是欠指定的；它们严格保证轨迹的\textbf{序数（ordinal）}正确性，而PBRS关键依赖于逐步的\textbf{基数增量（cardinal increments）}（$F(s, a, s') = \gamma\Phi(s') - \Phi(s)$）。由于缺乏明确的曲率约束，神经网络极易收敛到真实势函数的任意的、病态的单调扭曲（例如，极端的阶跃函数或过度平坦的对数曲线）。这些单调等效但在结构上退化的奖励曲面是导致RL不稳定的罪魁祸首。
 
-% TODO: 插入首页图，直观展示相同的排序准确率如何产生不同的曲率以及灾难性的RL失败
-% \begin{figure}[htb]
-%     \centering
-%     \includegraphics[width=0.9\textwidth]{figures/monotonicity_trap.pdf}
-%     \caption{单调性陷阱示意图}
-%     \label{fig:monotonicity_trap}
-% \end{figure}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/monotonicity-trap.png}
+    \caption{\textbf{单调性陷阱（Monotonicity Trap）示意图。}左侧面板（序数等价性）展示了三条单调递增的势函数曲线（平滑线性、指数型、阶跃型Sigmoid），它们在状态序列 $s_1, s_2, s_3, s_4$ 上均能完美保持相同的序数偏好（即 $\Phi(s_4) > \Phi(s_3) > \Phi(s_2) > \Phi(s_1)$）。右侧面板（基数增量差异与RL灾难）提取了相邻状态间的势函数步长（$\Delta\Phi$）：平滑曲线产生均匀的步长分布，引导稳定的策略探索（Stable Exploration）；而指数或阶跃曲线则在某一步产生极端的梯度峰值（Spike），其余步奖励消失（接近于0），导致梯度爆炸或策略崩溃（Policy Collapse）。这直观地表明，相同的排序准确率可能对应着截然不同的基数增量结构，从而导致灾难性的RL失败。}
+    \label{fig:monotonicity_trap}
+\end{figure}
 
 为了绕过这种可识别性差距，最近最先进的过程奖励模型，如ROBOMETER\cite{liang2026}和Robo-Dopamine\cite{tan2026}，求助于昂贵的外部数据补丁。它们引入了明确的绝对进度标签（例如，时间步长比$t/T$或特权模拟器距离）来人为地锚定基数尺度。然而，这种绝对尺度监督的获取成本高昂，并且在面对现实世界机器人技术中固有的大量次优或失败轨迹时，极易发生语义不对齐。
 
