@@ -41,6 +41,7 @@ plt.rc("figure", titlesize=FONT_SIZE + 2)
 
 COLORS = {
     "exp_a": "#7f7f7f",     # gray
+    "exp_b": "#9467bd",     # purple
     "exp_c": "#1f77b4",     # blue (ours)
     "exp_d": "#ff7f0e",     # orange (oracle)
     "successful": "#2ca02c",  # green
@@ -487,25 +488,30 @@ def gen_fig4_bar_chart():
     all_variants.append(out_path)
     print(f"  [Fig4 v2] Saved {out_path}")
 
-    # ---- Variant 3: Include Exp A (Qwen round3a as best available) ----
-    metrics_a_dir = EVAL_OUT_2B / "rbm_exp_a_pure_bt_round3a_checkpoint-2500"
-    metrics_a_file = metrics_a_dir / "all_metrics.json"
-    if metrics_a_file.exists() or (metrics_a_dir / "policy_ranking" / "metrics.json").exists():
-        metrics_a = load_all_metrics(metrics_a_dir)
-        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    # ---- Variant 3: All 4 methods (A/B/C/D) — SmolVLM runs ----
+    metrics_a_dir = EVAL_OUT / "rbm_exp_a_pure_bt_smolvlm_checkpoint-1000"
+    metrics_b_dir = EVAL_OUT / "rbm_exp_b_l2_smooth_smolvlm_checkpoint-1000"
 
-        metric_configs_3 = [
+    metrics_a = load_all_metrics(metrics_a_dir)
+    metrics_b = load_all_metrics(metrics_b_dir)
+
+    if metrics_a and metrics_b:
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+
+        metric_configs_4 = [
+            ("VOC r", "reward_alignment", "libero_90_libero_90_failure/pearson"),
             ("Kendall tau", "policy_ranking", "libero_90_libero_90_failure/kendall_sum"),
             ("Ranking Accuracy", "policy_ranking", "libero_90_libero_90_failure/ranking_acc_sum"),
             ("Succ-Fail Diff", "policy_ranking", "libero_90_libero_90_failure/avg_succ_fail_diff_sum"),
         ]
         all_methods = [
-            ("Exp A\n(Pure BT)", metrics_a, COLORS["exp_a"]),
-            ("Exp C\n(BT+Entropy,\nOurs)", metrics_c, COLORS["exp_c"]),
-            ("Exp D\n(Supervised\nOracle)", metrics_d, COLORS["exp_d"]),
+            ("A\nPure BT", metrics_a, COLORS["exp_a"]),
+            ("B\nBT+L2", metrics_b, COLORS["exp_b"]),
+            ("C\nBT+Entropy\n(Ours)", metrics_c, COLORS["exp_c"]),
+            ("D\nSupervised\nOracle", metrics_d, COLORS["exp_d"]),
         ]
 
-        for ax_idx, (title, section, key) in enumerate(metric_configs_3):
+        for ax_idx, (title, section, key) in enumerate(metric_configs_4):
             ax = axes[ax_idx]
             x = np.arange(len(all_methods))
             vals = []
@@ -531,13 +537,15 @@ def gen_fig4_bar_chart():
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
 
-        fig.suptitle("Policy Ranking on LIBERO-90: Three Methods Compared", fontsize=FONT_SIZE, y=1.03)
+        fig.suptitle("LIBERO-90: Four Methods Compared", fontsize=FONT_SIZE, y=1.03)
         plt.tight_layout()
         out_path = OUT_DIR / "fig4_main_results_bar_v3.pdf"
         fig.savefig(out_path, bbox_inches="tight", dpi=200)
         plt.close(fig)
         all_variants.append(out_path)
         print(f"  [Fig4 v3] Saved {out_path}")
+    else:
+        print("  [Fig4 v3] Skipped — Exp A/B eval results not yet available")
 
     return all_variants
 
