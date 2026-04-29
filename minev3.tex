@@ -20,7 +20,7 @@
 
 
 \section*{摘~要}
-设计有效的奖励信号是强化学习（RL）应用于复杂连续控制和具身智能的核心瓶颈。基于偏好的强化学习（PbRL）通过成对轨迹比较来学习奖励模型，但将其势函数直接应用于基于势的奖励重塑（PBRS）时，常遭遇极端方差和早期梯度崩溃。本文揭示了这一现象的根本原因——\textbf{单调性陷阱（Monotonicity Trap）}：纯排序目标仅能保证轨迹的序数正确性，却无法约束PBRS所依赖的基数增量结构，导致神经网络极易收敛于病态的单调扭曲势函数。为了在不牺牲标签效率的前提下解决这一问题，我们提出两个互补的无监督正则化项：\textbf{最大熵增量先验（$\mathcal{L}_{struct}$）}通过最大化增量分布的熵，将势函数锚定在增量最均匀的结构上；\textbf{单调性铰链损失（$\mathcal{L}_{mono}$）}通过惩罚负增量，确保势函数沿轨迹方向单调递增。二者分别解决增量的均匀性和方向性问题，共同从纯序数偏好中恢复对RL友好的基数增量结构。在LIBERO模拟操作基准测试上的实验表明，我们的方法仅使用廉价的成对轨迹偏好标签，在帧级奖励对齐和轨迹级策略排序上均大幅超越了依赖帧级进度标签的有监督基线（VOC $r$: $0.968$ vs $0.860$，提升$12.6\%$；Kendall $\tau$: $0.696$ vs $0.504$，提升$38.1\%$）。本研究证明，无需昂贵的绝对进度标注，仅凭序数偏好即可恢复稳定且对RL友好的基数增量结构。
+设计有效的奖励信号是强化学习（RL）应用于复杂连续控制和具身智能的核心瓶颈。基于偏好的强化学习（PbRL）通过成对轨迹比较来学习奖励模型，但将其势函数直接应用于基于势的奖励重塑（PBRS）时，常遭遇极端方差和早期梯度崩溃。本文揭示了这一现象的根本原因——\textbf{单调性陷阱（Monotonicity Trap）}：纯排序目标仅能保证轨迹的序数正确性，却无法约束PBRS所依赖的基数增量结构，导致神经网络极易收敛于增量结构病态扭曲的势函数。为了在不牺牲标签效率的前提下解决这一问题，我们提出两个互补的无监督正则化项：\textbf{最大熵增量先验（$\mathcal{L}_{struct}$）}通过最大化增量分布的熵，将势函数锚定在增量最均匀的结构上；\textbf{单调性铰链损失（$\mathcal{L}_{mono}$）}通过惩罚负增量，确保势函数沿轨迹方向单调递增。二者分别解决增量的均匀性和方向性问题，共同从纯序数偏好中恢复对RL友好的基数增量结构。在LIBERO模拟操作基准测试上的实验表明，我们的方法仅使用廉价的成对轨迹偏好标签，在帧级奖励对齐和轨迹级策略排序上均大幅超越了依赖帧级进度标签的有监督基线（VOC $r$: $0.968$ vs $0.860$，提升$12.6\%$；Kendall $\tau$: $0.696$ vs $0.504$，提升$38.1\%$）。本文表明，无需昂贵的绝对进度标注，仅凭序数偏好即可恢复稳定且对RL友好的基数增量结构。
 
 % keywords
 \vspace{1em}\noindent
@@ -33,7 +33,7 @@
 {\centering\zihao{-2}\bfseries\sffamily \mytitleEN\par}
 \vspace{1em}
 \section*{Abstract}
-Designing effective reward signals remains the core bottleneck for applying reinforcement learning (RL) to complex continuous control and embodied intelligence. Preference-based reinforcement learning (PbRL) learns reward models through pairwise trajectory comparisons, but directly deploying its potential function into potential-based reward shaping (PBRS) often encounters extreme variance and early gradient collapse. This paper reveals the root cause of this phenomenon---the \textbf{Monotonicity Trap}: pure ranking objectives can only guarantee ordinal correctness of trajectories but cannot constrain the cardinal increment structure that PBRS relies upon, causing neural networks to easily converge to pathologically distorted monotonic potential functions. To address this problem without sacrificing label efficiency, we propose two complementary unsupervised regularizers: a \textbf{Maximum Entropy Increment Prior ($\mathcal{L}_{struct}$)} that maximizes the entropy of the increment distribution to enforce uniformity, and a \textbf{Monotonicity Hinge Loss ($\mathcal{L}_{mono}$)} that penalizes negative increments to ensure the potential function increases monotonically along trajectories. Together, they recover an RL-friendly cardinal increment structure from pure ordinal preferences. Experiments on the LIBERO simulated manipulation benchmark demonstrate that our method, using only cheap pairwise trajectory preference labels, surpasses fully supervised baselines that rely on frame-level progress labels on both frame-level reward alignment and trajectory-level policy ranking (VOC $r$ improved by 12.6\%, Kendall $\tau$ improved by 38.1\%). This work demonstrates that stable and RL-friendly cardinal increment structure can be recovered from ordinal preferences alone, without expensive absolute progress annotations.
+Designing effective reward signals remains the core bottleneck for applying reinforcement learning (RL) to complex continuous control and embodied intelligence. Preference-based reinforcement learning (PbRL) learns reward models through pairwise trajectory comparisons, but directly deploying its potential function into potential-based reward shaping (PBRS) often encounters extreme variance and early gradient collapse. This paper reveals the root cause of this phenomenon---the \textbf{Monotonicity Trap}: pure ranking objectives can only guarantee ordinal correctness of trajectories but cannot constrain the cardinal increment structure that PBRS relies upon, causing neural networks to easily converge to potential functions with pathologically distorted increment structures. To address this problem without sacrificing label efficiency, we propose two complementary unsupervised regularizers: a \textbf{Maximum Entropy Increment Prior ($\mathcal{L}_{struct}$)} that maximizes the entropy of the increment distribution to enforce uniformity, and a \textbf{Monotonicity Hinge Loss ($\mathcal{L}_{mono}$)} that penalizes negative increments to ensure the potential function increases monotonically along trajectories. Together, they recover an RL-friendly cardinal increment structure from pure ordinal preferences. Experiments on the LIBERO simulated manipulation benchmark demonstrate that our method, using only cheap pairwise trajectory preference labels, surpasses fully supervised baselines that rely on frame-level progress labels on both frame-level reward alignment and trajectory-level policy ranking (VOC $r$ improved by 12.6\%, Kendall $\tau$ improved by 38.1\%). These results show that stable and RL-friendly cardinal increment structure can be recovered from ordinal preferences alone, without expensive absolute progress annotations.
 
 % keywords
 \vspace{1em}\noindent
@@ -49,28 +49,26 @@ Designing effective reward signals remains the core bottleneck for applying rein
 
 \section{引言}
 
-设计和指定有效的奖励信号，与样本效率低下和现实迁移鸿沟（Sim-to-Real Gap）并列，仍然是将强化学习（RL）扩展到复杂连续控制和具身智能（Embodied AI）的核心瓶颈之一 \cite{abdelkareem2022advances}。为了克服手动奖励工程的脆弱性并缓解奖励作弊（reward hacking）问题，基于偏好的强化学习（PbRL）已成为一项重要范式 \cite{christiano2017deep}。这一范式的核心优势在于，它能够纯粹从成对的轨迹比较中内化人类意图或启发式任务进度。当前的主流方法通常利用成对排序损失（如Bradley--Terry模型）来优化参数化的状态势函数 \cite{brown2019extrapolating, krack2026rewarding}。随后，学习到的势函数通常通过基于势的奖励重塑（PBRS）\cite{ng1999policy} 进行部署。PBRS 提供密集重塑奖励 $F(s, a, s') = \gamma \Phi(s') - \Phi(s)$，在理论上为探索提供引导，同时在数学上保证最优策略的不变性。
+设计有效的奖励信号是将强化学习（RL）扩展到复杂连续控制与具身智能的核心瓶颈 \cite{abdelkareem2022advances}。基于偏好的强化学习（PbRL）通过成对轨迹比较习得任务进度，避免了逐帧标注的高昂代价，已成为奖励建模的重要范式 \cite{christiano2017deep}。主流方法利用 Bradley--Terry 排序损失优化状态势函数 $\Phi_\theta(s)$ \cite{brown2019extrapolating, krack2026rewarding}，并通过基于势的奖励重塑（PBRS）\cite{ng1999policy} 部署密集奖励 $F(s, a, s') = \gamma \Phi(s') - \Phi(s)$，在数学上保证最优策略不变性。
 
-尽管在理论上很优雅，但在将纯粹基于偏好的势函数部署到在线 RL 循环中时，研究者常观察到显著的优化不稳定性和早期梯度崩溃 \cite{liang2022rune}。即使奖励模型在验证集上实现了近乎完美的轨迹排序准确率，下游的策略优化也经常因奖励信号的极端方差而遭受失败。
-
-我们将这种现象的根本原因确定为\textbf{单调性陷阱（Monotonicity Trap）}，如\cref{fig:monotonicity_trap}所示。这一陷阱源于目标函数的可识别性差距：排序目标只保证轨迹之间的\textbf{序数}正确性（即轨迹级总和满足 $\Phi(\tau_w) > \Phi(\tau_l)$），却完全无法约束 PBRS 所依赖的逐步\textbf{基数增量}（即具体的 $\Delta\Phi$ 步进值）。在缺乏额外结构约束的情况下，神经网络由于倾向于寻找最简单的拟合捷径（Shortcut），极易收敛到病态的单调扭曲状态。这些极端曲率虽然与理想势函数的轨迹级排序结果完全一致，但产生的逐步奖励信号却天差地别，导致早期探索区域的奖励几乎消失，或在任务末期产生巨大的梯度脉冲，直接破坏了连续控制算法的训练稳定性。
+然而，将偏好学习到的势函数通过 PBRS 部署时，实践中常出现显著的优化不稳定性乃至早期梯度崩溃 \cite{liang2022rune}——即使奖励模型在轨迹排序上近乎完美，下游策略优化仍常因奖励信号的极端方差而失败。本文揭示了这一现象的根源——\textbf{单调性陷阱（Monotonicity Trap）}（\cref{fig:monotonicity_trap}）：排序目标仅保证轨迹间的\textbf{序数}正确性（$\Phi(\tau_w) > \Phi(\tau_l)$），却无法约束 PBRS 所依赖的逐步\textbf{基数增量}（$\Delta\Phi$）。缺乏结构约束时，神经网络因捷径学习（shortcut learning）倾向，极易收敛到增量分布病态扭曲的势函数：虽在轨迹级排序上完全正确，却导致早期探索区域奖励几乎消失、或在任务末期产生巨大的梯度脉冲，破坏了训练稳定性。
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=0.95\textwidth]{figures/monotonicity-trap.png}
-    \caption{\textbf{单调性陷阱及其对基数增量结构的影响。}左图展示了三种不同的势函数曲线（线性、指数、Sigmoid），它们在状态序数关系上完全等价（均满足 $\Phi(s_4) > \dots > \Phi(s_1)$），在纯排序损失（BT Loss）下具有不可识别性。右图揭示了这种序数一致性掩盖下的基数脱节：线性势产生的奖励增量 $\Delta\Phi$ 分布均匀，能提供稳定的稠密引导；指数势在任务末期产生剧烈的梯度脉冲（易导致数值爆炸）；而 Sigmoid 势则导致早期探索区域的奖励信号严重稀疏（诱发梯度消失）。这种由排序目标欠指定导致的结构性退化正是在线 RL 训练不稳定的物理根源。}
+    \caption{\textbf{单调性陷阱及其对基数增量结构的影响。}左图展示了三种不同的势函数曲线（线性、指数、Sigmoid），它们在状态序数关系上完全等价（均满足 $\Phi(s_4) > \dots > \Phi(s_1)$），在纯排序损失（BT Loss）下具有不可识别性。右图揭示了这种序数一致性掩盖下的基数脱节：线性势产生的奖励增量 $\Delta\Phi$ 分布均匀，能提供稳定的稠密引导；指数势在任务末期产生剧烈的梯度脉冲（易导致数值爆炸）；而 Sigmoid 势则导致早期探索区域的奖励信号严重稀疏（诱发梯度消失）。这种由排序目标欠指定导致的结构性退化正是 PBRS 部署不稳定的根源。}
     \label{fig:monotonicity_trap}
 \end{figure}
 
-为了绕过这一序数与基数之间的鸿沟，近期的过程奖励模型如 ROBOMETER \cite{robometer2026} 和 Robo-Dopamine \cite{robodopamine2025} 引入了显式的进度标签（如环境时间步比率 $t/T$）来强行锚定势函数的基数尺度。然而，这种策略面临着潜在的语义不对齐问题：时间的流逝并不等同于任务的真实物理进度，尤其是在现实场景中存在大量原地徘徊或失败的次优轨迹时，单纯使用 $t/T$ 往往会向网络注入矛盾的进度梯度。
+为弥合这一序数与基数之间的鸿沟，近期的过程奖励模型如 ROBOMETER \cite{robometer2026} 和 Robo-Dopamine \cite{robodopamine2025} 引入了显式的进度标签（如时间步比率 $t/T$）来约束势函数的基数尺度。然而，这种策略面临语义对齐风险：时间步的推进并不等同于任务的真实物理进度，尤其在次优轨迹中存在大量原地徘徊或失败片段时，$t/T$ 标签会向网络注入矛盾的监督信号。
 
-本文的目标是在不引入这种存在语义对齐风险的绝对进度标签的前提下，弥合偏好学习中的可识别性差距。我们的核心洞察是：恢复对 RL 友好的基数增量结构，只需在纯排序目标上施加基于信息论的轻量级结构约束。具体地，我们引入\textbf{最大熵增量先验}（Maximum Entropy Increment Prior, $\mathcal{L}_{struct}$），通过最大化增量序列分布的熵来鼓励模型在相邻状态转换间均匀分配进度值，并配合\textbf{单调性铰链损失}（$\mathcal{L}_{mono}$）确保势函数沿轨迹方向单调递增。二者共同作用，在无限个满足排序等效的单调函数族中，自动排除导致梯度爆炸或消失的病态扭曲，使势函数网络锚定在增量分布最均匀、方向最一致的结构上。
+本文的目标是在不依赖帧级进度标签的前提下，弥合偏好学习中序数目标与基数需求之间的鸿沟。核心思路在于：恢复对 RL 友好的基数增量结构，只需在排序目标上施加基于信息论的轻量级结构约束。具体地，我们引入\textbf{最大熵增量先验}（Maximum Entropy Increment Prior, $\mathcal{L}_{struct}$），通过最大化增量分布的熵来鼓励势函数在相邻状态转换间均匀分配进度值；同时配合\textbf{单调性铰链损失}（$\mathcal{L}_{mono}$）惩罚负增量，确保势函数沿轨迹方向单调递增。两项正则化分别解决增量的\textbf{均匀性}和\textbf{方向性}问题，共同从纯序数偏好中恢复出对 RL 友好的基数增量结构。
 
-本文的主要贡献：
+本文的主要贡献如下：
 \begin{itemize}[leftmargin=*,noitemsep]
-    \item \textbf{问题诊断：}我们正式定义并分析了\textbf{单调性陷阱}，通过实验证明纯排序模型虽然能学习到正确的轨迹序数关系，但其帧级增量结构往往发生严重退化，揭示了 PbRL 奖励重塑不稳定的理论根源。
-    \item \textbf{方法设计：}我们提出两个互补的结构正则项——$\mathcal{L}_{struct}$将熵最大化原理应用于进度增量分布以保证均匀性，$\mathcal{L}_{mono}$通过铰链损失保证增量方向为正。两者均无需引入环境特权信息或额外的进度标注，即可从序数偏好中恢复出平滑稳定的基数增量结构。
-    \item \textbf{实验验证：}在 LIBERO 模拟操作基准 \cite{liu2023libero} 上，我们的方法仅凭成对轨迹偏好，在帧级奖励对齐（VOC $r$: $0.968$ vs $0.860$）和轨迹级策略排序（Kendall $\tau$: $0.696$ vs $0.504$）上均大幅超越了依赖帧级进度监督的有监督基线，有力支持了基数增量结构可以从纯序数信号中恢复的观点。
+    \item \textbf{问题诊断。}我们定义并分析了\textbf{单调性陷阱}：纯排序模型虽能正确排序轨迹，其帧级增量结构却发生严重退化。这揭示了 PbRL 奖励重塑不稳定的根本原因在于序数目标对基数结构的欠指定。
+    \item \textbf{方法设计。}我们提出两个互补的无监督正则项：$\mathcal{L}_{struct}$通过最大化增量分布的熵保证均匀性，$\mathcal{L}_{mono}$通过铰链损失保证增量方向为正。两者均无需帧级进度标注，即可从序数偏好中恢复出平滑的基数增量结构。
+    \item \textbf{实验验证。}在 LIBERO 操作基准 \cite{liu2023libero} 上，本文方法仅凭成对轨迹偏好，在帧级奖励对齐（VOC $r$: $0.968$ vs $0.860$，提升$12.6\%$）和轨迹级策略排序（Kendall $\tau$: $0.696$ vs $0.504$，提升$38.1\%$）上均超越了依赖帧级进度监督的有监督基线。
 \end{itemize}
 
 \section{相关工作}
@@ -377,7 +375,7 @@ $\mathcal{L}_{mono} = \text{mean}(\text{ReLU}(-\Delta\Phi_t))$通过惩罚负增
 \begin{figure}[htb]
     \centering
     \includegraphics[width=0.95\textwidth]{figures/fig7_trajectory_frames_v1.pdf}
-    \caption{代表性轨迹的关键帧与进度预测曲线。每行展示一条轨迹的四个等间距关键帧及本文方法的进度预测。成功轨迹（绿色）的进度平稳上升，失败轨迹（红色）的进度停滞或偏低，直观展示了奖励模型对任务完成度的感知能力。}
+    \caption{代表性轨迹的关键帧与进度预测曲线。每行展示一条轨迹的四个等间距关键帧及本文方法的进度预测。成功轨迹（绿色）的进度平稳上升。}
     \label{fig:trajectory_frames}
 \end{figure}
 
