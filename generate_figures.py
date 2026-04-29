@@ -104,7 +104,7 @@ def load_npz_frames(npz_path):
 # ===================================================================
 def gen_fig1_libero_overview():
     """Grid of representative LIBERO task frames."""
-    results_file = EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
+    results_file = EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
     data = load_json(results_file)
 
     successful = [d for d in data if d["quality_label"] == "successful"]
@@ -165,7 +165,7 @@ def gen_fig1_libero_overview():
 def gen_fig2_progress_curves():
     """Progress curves for successful vs failed trajectories, same task."""
     results_90 = load_json(
-        EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000" / "policy_ranking" / "libero_90_libero_90_failure_task_groups.json"
+        EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "policy_ranking" / "libero_90_libero_90_failure_task_groups.json"
     )
 
     all_variants = []
@@ -223,7 +223,7 @@ def gen_fig2_progress_curves():
 
     # Variant 3: per-frame progress curves from reward_alignment results
     results_ra = load_json(
-        EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
+        EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
     )
     # Group by task
     task_to_trajs = defaultdict(list)
@@ -271,7 +271,7 @@ def gen_fig2_progress_curves():
 def gen_fig3_exp_c_vs_d():
     """Side-by-side progress curves for same trajectories under Exp C vs D."""
     results_c = load_json(
-        EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
+        EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
     )
     results_d = load_json(
         EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
@@ -384,7 +384,7 @@ def gen_fig3_exp_c_vs_d():
 # ===================================================================
 def gen_fig4_bar_chart():
     """Grouped bar chart of main quantitative results across experiments."""
-    metrics_c = load_all_metrics(EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000")
+    metrics_c = load_all_metrics(EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000")
     metrics_d = load_all_metrics(EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900")
 
     all_variants = []
@@ -553,7 +553,7 @@ def gen_fig5_training_dynamics():
 
     exp_configs = {
         "Exp C (BT + Entropy Prior)": {
-            "tb_dir": str(LOGS_ROOT / "exp_c_entropy_smolvlm" / "exp_c_entropy_smolvlm" / "tb"),
+            "tb_dir": str(LOGS_ROOT / "exp_c_dirfix_v1" / "exp_c_dirfix_v1" / "tb"),
             "color": COLORS["exp_c"],
             "tags": {
                 "Preference Loss": "train/preference_loss",
@@ -726,7 +726,7 @@ def gen_fig6_confusion_matrix():
     all_variants = []
 
     for variant_idx, (exp_label, exp_dir) in enumerate([
-        ("Exp C (BT + Entropy Prior)", EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000"),
+        ("Exp C (BT + Entropy Prior)", EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000"),
         ("Exp D (Supervised Oracle)", EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900"),
     ]):
         task_groups_file = exp_dir / "policy_ranking" / "libero_90_libero_90_failure_task_groups.json"
@@ -773,7 +773,7 @@ def gen_fig6_confusion_matrix():
     # Variant 3: Side-by-side Exp C vs D
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     for ax_idx, (exp_label, exp_dir) in enumerate([
-        ("Exp C (Ours)", EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000"),
+        ("Exp C (Ours)", EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000"),
         ("Exp D (Oracle)", EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900"),
     ]):
         ax = axes[ax_idx]
@@ -825,7 +825,7 @@ def gen_fig6_confusion_matrix():
 def gen_fig7_trajectory_frames():
     """Key frames from trajectories with corresponding progress curves."""
     results_c = load_json(
-        EVAL_OUT / "rbm_exp_c_entropy_smolvlm_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
+        EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
     )
 
     all_variants = []
