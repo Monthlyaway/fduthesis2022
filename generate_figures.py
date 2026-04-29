@@ -161,7 +161,7 @@ def gen_fig1_libero_overview():
 
 
 # ===================================================================
-# Figure 2: Progress Curves — Successful vs Failed (Exp C)
+# Figure 2: Progress Curves — Successful vs Failed (Ours)
 # ===================================================================
 def gen_fig2_progress_curves():
     """Progress curves for successful vs failed trajectories, same task."""
@@ -214,7 +214,7 @@ def gen_fig2_progress_curves():
             axes[j].axis("off")
 
         agg_label = "Average" if variant_idx == 0 else "Sum"
-        fig.suptitle(f"Exp C: Predicted Rewards — Successful vs Failed ({agg_label} Aggregation)", fontsize=FONT_SIZE)
+        fig.suptitle(f"Ours (BT+MaxEnt): Predicted Rewards — Successful vs Failed ({agg_label} Aggregation)", fontsize=FONT_SIZE)
         plt.tight_layout()
         out_path = OUT_DIR / f"fig2_reward_succ_vs_fail_v{variant_idx + 1}.pdf"
         fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -255,7 +255,7 @@ def gen_fig2_progress_curves():
         plt.Line2D([0], [0], color=COLORS["failure"], lw=2, label="Failed"),
     ]
     fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=12, bbox_to_anchor=(0.5, 1.03))
-    fig.suptitle("Exp C (Ours): Per-Frame Progress Predictions on LIBERO-90", fontsize=FONT_SIZE, y=1.06)
+    fig.suptitle("Ours (BT+MaxEnt): Per-Frame Progress Predictions on LIBERO-90", fontsize=FONT_SIZE, y=1.06)
     plt.tight_layout()
     out_path = OUT_DIR / "fig2_progress_curves_v3.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -267,7 +267,7 @@ def gen_fig2_progress_curves():
 
 
 # ===================================================================
-# Figure 3: Exp C vs Exp D — Side-by-side progress curves
+# Figure 3: Ours vs Supervised Oracle — Side-by-side progress curves
 # ===================================================================
 def gen_fig3_exp_c_vs_d():
     """Side-by-side progress curves for same trajectories under Exp C vs D."""
@@ -299,8 +299,8 @@ def gen_fig3_exp_c_vs_d():
         pp_c = c_traj["progress_pred"]
         pp_d = d_traj["progress_pred"]
 
-        ax.plot(range(len(pp_c)), pp_c, color=COLORS["exp_c"], linewidth=2.5, label="Exp C (Ours)")
-        ax.plot(range(len(pp_d)), pp_d, color=COLORS["exp_d"], linewidth=2.5, label="Exp D (Oracle)", linestyle="--")
+        ax.plot(range(len(pp_c)), pp_c, color=COLORS["exp_c"], linewidth=2.5, label="Ours (BT+MaxEnt)")
+        ax.plot(range(len(pp_d)), pp_d, color=COLORS["exp_d"], linewidth=2.5, label="Supervised Oracle", linestyle="--")
 
         # Ground truth if available
         if "target_progress" in c_traj and c_traj["target_progress"]:
@@ -324,11 +324,11 @@ def gen_fig3_exp_c_vs_d():
         axes[j].axis("off")
 
     handles = [
-        plt.Line2D([0], [0], color=COLORS["exp_c"], lw=2.5, label="Exp C (BT + Entropy, Ours)"),
-        plt.Line2D([0], [0], color=COLORS["exp_d"], lw=2.5, linestyle="--", label="Exp D (Supervised Oracle)"),
+        plt.Line2D([0], [0], color=COLORS["exp_c"], lw=2.5, label="Ours (BT+MaxEnt)"),
+        plt.Line2D([0], [0], color=COLORS["exp_d"], lw=2.5, linestyle="--", label="Supervised Oracle"),
     ]
     fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=12, bbox_to_anchor=(0.5, 1.03))
-    fig.suptitle("Progress Predictions: Exp C vs Exp D on Same Trajectories", fontsize=FONT_SIZE, y=1.06)
+    fig.suptitle("Progress Predictions: Ours vs Supervised Oracle on Same Trajectories", fontsize=FONT_SIZE, y=1.06)
     plt.tight_layout()
     out_path = OUT_DIR / "fig3_exp_c_vs_d_v1.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -347,8 +347,8 @@ def gen_fig3_exp_c_vs_d():
         pp_c = c_traj["progress_pred"]
         pp_d = d_traj["progress_pred"]
 
-        ax.plot(range(len(pp_c)), pp_c, color=COLORS["exp_c"], linewidth=2.5, label="Exp C (Ours)")
-        ax.plot(range(len(pp_d)), pp_d, color=COLORS["exp_d"], linewidth=2.5, linestyle="--", label="Exp D (Oracle)")
+        ax.plot(range(len(pp_c)), pp_c, color=COLORS["exp_c"], linewidth=2.5, label="Ours (BT+MaxEnt)")
+        ax.plot(range(len(pp_d)), pp_d, color=COLORS["exp_d"], linewidth=2.5, linestyle="--", label="Supervised Oracle")
 
         if "target_progress" in c_traj and c_traj["target_progress"]:
             tp = c_traj["target_progress"]
@@ -365,8 +365,8 @@ def gen_fig3_exp_c_vs_d():
         ax.spines["right"].set_visible(False)
 
     handles = [
-        plt.Line2D([0], [0], color=COLORS["exp_c"], lw=2.5, label="Exp C (BT + Entropy Prior, Ours)"),
-        plt.Line2D([0], [0], color=COLORS["exp_d"], lw=2.5, linestyle="--", label="Exp D (Supervised Oracle)"),
+        plt.Line2D([0], [0], color=COLORS["exp_c"], lw=2.5, label="Ours (BT+MaxEnt)"),
+        plt.Line2D([0], [0], color=COLORS["exp_d"], lw=2.5, linestyle="--", label="Supervised Oracle"),
         plt.Line2D([0], [0], color="gray", lw=1, linestyle=":", alpha=0.5, label="Ground Truth"),
     ]
     fig.legend(handles=handles, loc="upper center", ncol=3, fontsize=12, bbox_to_anchor=(0.5, 1.02))
@@ -400,7 +400,7 @@ def gen_fig4_bar_chart():
         ("Succ-Fail Diff", "policy_ranking", "libero_90_libero_90_failure/avg_succ_fail_diff_sum", False),
     ]
 
-    methods = ["Exp C\n(Ours)", "Exp D\n(Oracle)"]
+    methods = ["Ours\n(BT+MaxEnt)", "Supervised\nOracle"]
     method_colors = [COLORS["exp_c"], COLORS["exp_d"]]
     x = np.arange(len(methods))
     width = 0.5
@@ -427,7 +427,7 @@ def gen_fig4_bar_chart():
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
-    fig.suptitle("LIBERO-90 Evaluation: Exp C (Ours) vs Exp D (Supervised Oracle)", fontsize=FONT_SIZE, y=1.03)
+    fig.suptitle("LIBERO-90: Ours (BT+MaxEnt) vs Supervised Oracle", fontsize=FONT_SIZE, y=1.03)
     plt.tight_layout()
     out_path = OUT_DIR / "fig4_main_results_bar_v1.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -454,8 +454,8 @@ def gen_fig4_bar_chart():
         x = np.arange(len(metric_names))
         w = 0.3
         for mi, (m_data, m_label, m_color) in enumerate([
-            (metrics_c, "Exp C (Ours)", COLORS["exp_c"]),
-            (metrics_d, "Exp D (Oracle)", COLORS["exp_d"]),
+            (metrics_c, "Ours (BT+MaxEnt)", COLORS["exp_c"]),
+            (metrics_d, "Supervised Oracle", COLORS["exp_d"]),
         ]):
             vals = []
             for sec, key in zip(sections, metric_keys):
@@ -480,7 +480,7 @@ def gen_fig4_bar_chart():
         if ax_idx == 0:
             ax.legend(fontsize=11)
 
-    fig.suptitle("Reward Model Evaluation: Exp C vs Exp D", fontsize=FONT_SIZE, y=1.02)
+    fig.suptitle("Reward Model Evaluation: Ours vs Supervised Oracle", fontsize=FONT_SIZE, y=1.02)
     plt.tight_layout()
     out_path = OUT_DIR / "fig4_main_results_bar_v2.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -505,10 +505,10 @@ def gen_fig4_bar_chart():
             ("Succ-Fail Diff", "policy_ranking", "libero_90_libero_90_failure/avg_succ_fail_diff_sum"),
         ]
         all_methods = [
-            ("A\nPure BT", metrics_a, COLORS["exp_a"]),
-            ("B\nBT+L2", metrics_b, COLORS["exp_b"]),
-            ("C\nBT+Entropy\n(Ours)", metrics_c, COLORS["exp_c"]),
-            ("D\nSupervised\nOracle", metrics_d, COLORS["exp_d"]),
+            ("Pure BT", metrics_a, COLORS["exp_a"]),
+            ("BT+L2\nSmooth", metrics_b, COLORS["exp_b"]),
+            ("Ours\n(BT+MaxEnt)", metrics_c, COLORS["exp_c"]),
+            ("Supervised\nOracle", metrics_d, COLORS["exp_d"]),
         ]
 
         for ax_idx, (title, section, key) in enumerate(metric_configs_4):
@@ -537,7 +537,7 @@ def gen_fig4_bar_chart():
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
 
-        fig.suptitle("LIBERO-90: Four Methods Compared", fontsize=FONT_SIZE, y=1.03)
+        fig.suptitle("LIBERO-90: Ablation Study \u2014 Four Methods Compared", fontsize=FONT_SIZE, y=1.03)
         plt.tight_layout()
         out_path = OUT_DIR / "fig4_main_results_bar_v3.pdf"
         fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -560,7 +560,7 @@ def gen_fig5_training_dynamics():
     all_variants = []
 
     exp_configs = {
-        "Exp C (BT + Entropy Prior)": {
+        "Ours (BT+MaxEnt)": {
             "tb_dir": str(LOGS_ROOT / "exp_c_dirfix_v1" / "exp_c_dirfix_v1" / "tb"),
             "color": COLORS["exp_c"],
             "tags": {
@@ -571,7 +571,7 @@ def gen_fig5_training_dynamics():
                 "Delta Mean": "train/delta_mean",
             }
         },
-        "Exp D (Full RoboMeter)": {
+        "Supervised Oracle (RoboMeter)": {
             "tb_dir": str(LOGS_ROOT / "exp_d_robometer_smolvlm" / "exp_d_robometer_smolvlm" / "tb"),
             "color": COLORS["exp_d"],
             "tags": {
@@ -603,7 +603,7 @@ def gen_fig5_training_dynamics():
     fig, axes = plt.subplots(2, 2, figsize=(14, 9))
     axes = axes.flatten()
 
-    c_data = all_data["Exp C (BT + Entropy Prior)"]
+    c_data = all_data["Ours (BT+MaxEnt)"]
     c_tags = ["Preference Loss", "Struct Loss", "Preference Accuracy", "Delta Variance"]
     c_ylabels = ["Loss", "Entropy Loss", "Accuracy", "Variance"]
 
@@ -613,7 +613,7 @@ def gen_fig5_training_dynamics():
             steps, values = c_data[tag]
             ax.plot(steps, values, color=COLORS["exp_c"], alpha=0.3, linewidth=0.8)
             smoothed = smooth(values, weight=0.8)
-            ax.plot(steps, smoothed, color=COLORS["exp_c"], linewidth=2.5, label="Exp C")
+            ax.plot(steps, smoothed, color=COLORS["exp_c"], linewidth=2.5, label="Ours")
         ax.set_title(tag, fontsize=13, pad=6)
         ax.set_xlabel("Training Step", fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
@@ -624,7 +624,7 @@ def gen_fig5_training_dynamics():
         axes[1].axhline(y=-np.log(7), color="red", linestyle="--", linewidth=1, alpha=0.5, label="Saturation: -log(7)")
         axes[1].legend(fontsize=10)
 
-    fig.suptitle("Exp C Training Dynamics (SmolVLM-500M, Full Finetune)", fontsize=FONT_SIZE, y=1.01)
+    fig.suptitle("Ours (BT+MaxEnt) Training Dynamics (SmolVLM-500M)", fontsize=FONT_SIZE, y=1.01)
     plt.tight_layout()
     out_path = OUT_DIR / "fig5_training_dynamics_v1.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -636,7 +636,7 @@ def gen_fig5_training_dynamics():
     fig, axes = plt.subplots(2, 2, figsize=(14, 9))
     axes = axes.flatten()
 
-    d_data = all_data["Exp D (Full RoboMeter)"]
+    d_data = all_data["Supervised Oracle (RoboMeter)"]
     d_tags = ["Preference Loss", "Preference Accuracy", "Progress Loss", "Progress Spearman"]
     d_ylabels = ["Loss", "Accuracy", "Loss", "Spearman Corr"]
 
@@ -653,7 +653,7 @@ def gen_fig5_training_dynamics():
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
-    fig.suptitle("Exp D Training Dynamics (SmolVLM-500M, Full Finetune)", fontsize=FONT_SIZE, y=1.01)
+    fig.suptitle("Supervised Oracle Training Dynamics (SmolVLM-500M)", fontsize=FONT_SIZE, y=1.01)
     plt.tight_layout()
     out_path = OUT_DIR / "fig5_training_dynamics_v2.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -679,7 +679,7 @@ def gen_fig5_training_dynamics():
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
-    fig.suptitle("Training Comparison: Exp C vs Exp D (SmolVLM-500M)", fontsize=FONT_SIZE, y=1.02)
+    fig.suptitle("Training Comparison: Ours vs Supervised Oracle (SmolVLM-500M)", fontsize=FONT_SIZE, y=1.02)
     plt.tight_layout()
     out_path = OUT_DIR / "fig5_training_dynamics_v3.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -715,7 +715,7 @@ def gen_fig5_training_dynamics():
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, fontsize=12, loc="upper right")
 
-    fig.suptitle("Exp C: Joint Loss Training Dynamics", fontsize=FONT_SIZE, y=1.01)
+    fig.suptitle("Ours (BT+MaxEnt): Joint Loss Training Dynamics", fontsize=FONT_SIZE, y=1.01)
     plt.tight_layout()
     out_path = OUT_DIR / "fig5_training_dynamics_v4_dual_axis.pdf"
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -734,8 +734,8 @@ def gen_fig6_confusion_matrix():
     all_variants = []
 
     for variant_idx, (exp_label, exp_dir) in enumerate([
-        ("Exp C (BT + Entropy Prior)", EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000"),
-        ("Exp D (Supervised Oracle)", EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900"),
+        ("Ours (BT+MaxEnt)", EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000"),
+        ("Supervised Oracle", EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900"),
     ]):
         task_groups_file = exp_dir / "policy_ranking" / "libero_90_libero_90_failure_task_groups.json"
         if not task_groups_file.exists():
@@ -781,8 +781,8 @@ def gen_fig6_confusion_matrix():
     # Variant 3: Side-by-side Exp C vs D
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     for ax_idx, (exp_label, exp_dir) in enumerate([
-        ("Exp C (Ours)", EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000"),
-        ("Exp D (Oracle)", EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900"),
+        ("Ours (BT+MaxEnt)", EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000"),
+        ("Supervised Oracle", EVAL_OUT / "rbm_exp_d_robometer_smolvlm_checkpoint-900"),
     ]):
         ax = axes[ax_idx]
         task_groups_file = exp_dir / "policy_ranking" / "libero_90_libero_90_failure_task_groups.json"
@@ -884,7 +884,7 @@ def gen_fig7_trajectory_frames():
                 tp = traj["target_progress"]
                 ax_plot.plot(range(len(tp)), tp, color="gray", linewidth=1, linestyle=":", alpha=0.5)
 
-        fig.suptitle("Trajectory Frames and Progress Predictions (Exp C)", fontsize=FONT_SIZE, y=1.01)
+        fig.suptitle("Trajectory Frames and Progress Predictions (Ours)", fontsize=FONT_SIZE, y=1.01)
         plt.tight_layout()
         out_path = OUT_DIR / f"fig7_trajectory_frames_v{variant_idx + 1}.pdf"
         fig.savefig(out_path, bbox_inches="tight", dpi=200)
@@ -912,7 +912,7 @@ def main():
     print("\n--- Figure 2: Progress Curves (Successful vs Failed) ---")
     results["fig2"] = gen_fig2_progress_curves()
 
-    print("\n--- Figure 3: Exp C vs Exp D Comparison ---")
+    print("\n--- Figure 3: Ours vs Supervised Oracle Comparison ---")
     results["fig3"] = gen_fig3_exp_c_vs_d()
 
     print("\n--- Figure 4: Main Results Bar Chart ---")
