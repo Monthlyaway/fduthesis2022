@@ -99,6 +99,23 @@ def setup_style():
     mpl.rcParams["savefig.bbox"]     = "tight"
 
 
+# Unified font-size tiers for consistency across all figures
+# Use these constants instead of ad-hoc numbers.
+FS = {
+    "suptitle":   16,   # figure-level title
+    "ax_title":   13,   # subplot title
+    "ax_label":   13,   # x/y axis labels
+    "tick":       11,   # tick labels
+    "annot":      11,   # value annotations on bars
+    "legend":     12,   # legend entries
+    "bar_annot":  11,   # bar value text
+    # Multi-panel grids (>=5 cols) – slightly smaller
+    "grid_title": 11,   # subplot title in dense grids
+    "grid_label": 11,   # axis labels in dense grids
+    "grid_tick":  10,   # tick labels in dense grids
+}
+
+
 def style_ax(ax, left=True, bottom=True):
     """Minimalist axis: only left+bottom spines in light gray."""
     ax.spines["top"].set_visible(False)
@@ -210,11 +227,11 @@ def gen_fig0_monotonicity_trap():
                         s=70, zorder=4)
 
     ax_left.set_xticks(states)
-    ax_left.set_xticklabels(state_labels, fontsize=14)
-    ax_left.set_ylabel(r"$\Phi(s)$", fontsize=15)
-    ax_left.set_xlabel("State", fontsize=14)
-    ax_left.set_title("(a) Potential Functions (Same Ranking)", fontsize=14, pad=12)
-    ax_left.legend(fontsize=12, framealpha=0.9, edgecolor=C["spine"])
+    ax_left.set_xticklabels(state_labels, fontsize=FS["tick"])
+    ax_left.set_ylabel(r"$\Phi(s)$", fontsize=FS["ax_label"])
+    ax_left.set_xlabel("State", fontsize=FS["ax_label"])
+    ax_left.set_title("(a) Potential Functions (Same Ranking)", fontsize=FS["ax_title"], pad=12)
+    ax_left.legend(fontsize=FS["legend"], framealpha=0.9, edgecolor=C["spine"])
     ax_left.set_ylim(-0.05, 1.15)
     style_ax(ax_left)
 
@@ -232,13 +249,13 @@ def gen_fig0_monotonicity_trap():
             ax_right.text(bar.get_x() + bar.get_width() / 2,
                           bar.get_height() + 0.02,
                           f"{val:.2f}", ha="center", va="bottom",
-                          fontsize=9, color=C["annot"], fontweight="bold")
+                          fontsize=FS["bar_annot"], color=C["annot"], fontweight="bold")
 
     ax_right.set_xticks(x_pos)
-    ax_right.set_xticklabels(delta_labels, fontsize=14)
-    ax_right.set_ylabel(r"$\Delta\Phi = \Phi(s_{i+1}) - \Phi(s_i)$", fontsize=13)
-    ax_right.set_title("(b) Increment Distributions", fontsize=14, pad=12)
-    ax_right.legend(fontsize=12, framealpha=0.9, edgecolor=C["spine"])
+    ax_right.set_xticklabels(delta_labels, fontsize=FS["tick"])
+    ax_right.set_ylabel(r"$\Delta\Phi = \Phi(s_{i+1}) - \Phi(s_i)$", fontsize=FS["ax_label"])
+    ax_right.set_title("(b) Increment Distributions", fontsize=FS["ax_title"], pad=12)
+    ax_right.legend(fontsize=FS["legend"], framealpha=0.9, edgecolor=C["spine"])
     ax_right.set_ylim(-0.05, 1.0)
     style_ax(ax_right)
 
@@ -284,8 +301,8 @@ def gen_fig1_libero_overview():
             frames = load_npz_frames(traj["video_path"])
             if frames is None:
                 axes[i].text(0.5, 0.5, "N/A", ha="center", va="center",
-                             fontsize=14, color=C["text"])
-                axes[i].set_title(traj["task"][:40] + "...", fontsize=10, pad=4,
+                             fontsize=FS["ax_label"], color=C["text"])
+                axes[i].set_title(traj["task"][:40] + "...", fontsize=FS["grid_title"], pad=4,
                                   color=C["text"])
                 axes[i].axis("off")
                 continue
@@ -295,7 +312,7 @@ def gen_fig1_libero_overview():
                             len(frames) - 1)
             axes[i].imshow(frames[frame_idx])
             task_short = traj["task"][:45] + "..." if len(traj["task"]) > 45 else traj["task"]
-            axes[i].set_title(task_short, fontsize=9, pad=4, color=C["text"])
+            axes[i].set_title(task_short, fontsize=FS["grid_title"], pad=4, color=C["text"])
             axes[i].axis("off")
             loaded_count += 1
 
@@ -349,18 +366,32 @@ def gen_fig2_progress_curves():
             agg_key = ("final_predicted_reward_avg" if variant_idx == 0
                        else "final_predicted_reward_sum")
 
+            bar_labels = []
+            bar_vals = []
+            bar_colors_fill = []
+            bar_colors_edge = []
             for si, s in enumerate(succ_items[:2]):
-                ax.bar(f"S{si+1}", s[agg_key],
-                       color=C["succ_fill"], edgecolor=C["succ_stroke"],
-                       linewidth=1.0, alpha=0.9)
+                bar_labels.append(f"S{si+1}")
+                bar_vals.append(s[agg_key])
+                bar_colors_fill.append(C["succ_fill"])
+                bar_colors_edge.append(C["succ_stroke"])
             for fi, f_item in enumerate(fail_items[:2]):
-                ax.bar(f"F{fi+1}", f_item[agg_key],
-                       color=C["fail_fill"], edgecolor=C["fail_stroke"],
-                       linewidth=1.0, alpha=0.9)
+                bar_labels.append(f"F{fi+1}")
+                bar_vals.append(f_item[agg_key])
+                bar_colors_fill.append(C["fail_fill"])
+                bar_colors_edge.append(C["fail_stroke"])
+
+            x_pos = np.arange(len(bar_labels))
+            bw = 0.45
+            ax.bar(x_pos, bar_vals, bw, color=bar_colors_fill,
+                   edgecolor=bar_colors_edge, linewidth=1.0, alpha=0.9)
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(bar_labels, fontsize=FS["tick"])
 
             task_short = task if len(task) <= 35 else task[:32] + "..."
-            ax.set_title(task_short, fontsize=9, pad=4, color=C["text"])
-            ax.set_ylabel("Predicted Reward" if i % cols == 0 else "")
+            ax.set_title(task_short, fontsize=FS["ax_title"], pad=6, color=C["text"])
+            ax.set_ylabel("Predicted Reward" if i % cols == 0 else "",
+                          fontsize=FS["ax_label"])
             style_ax(ax)
 
         for j in range(i + 1, len(axes)):
@@ -415,14 +446,15 @@ def gen_fig2_progress_curves():
             ax.plot(range(len(pp)), pp, color=C["succ_stroke"], linewidth=2, alpha=0.7)
 
         task_short = task if len(task) <= 30 else task[:27] + "..."
-        ax.set_title(task_short, fontsize=8, pad=3, color=C["text"])
+        ax.set_title(task_short, fontsize=FS["grid_title"], pad=3, color=C["text"])
         ax.set_ylim(y_lo, y_hi)
         ax.axhline(y=0, color=C["grid"], linewidth=0.5, alpha=0.6)
+        ax.tick_params(labelsize=FS["grid_tick"])
         style_ax(ax)
         if i >= cols:
-            ax.set_xlabel("Frame", fontsize=10)
+            ax.set_xlabel("Frame", fontsize=FS["grid_label"])
         if i % cols == 0:
-            ax.set_ylabel("Progress", fontsize=10)
+            ax.set_ylabel("Progress", fontsize=FS["grid_label"])
 
     for j in range(i + 1, len(axes)):
         axes[j].axis("off")
@@ -431,7 +463,7 @@ def gen_fig2_progress_curves():
         plt.Line2D([0], [0], color=C["succ_stroke"], lw=2, label="Successful"),
         plt.Line2D([0], [0], color=C["fail_stroke"], lw=2, label="Failed"),
     ]
-    fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=12,
+    fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=FS["legend"],
                bbox_to_anchor=(0.5, 1.03), framealpha=0.9, edgecolor=C["spine"])
     fig.suptitle("Ours (BT+MaxEnt): Per-Frame Progress Predictions on LIBERO-90",
                   fontsize=FONT_SIZE, y=1.06, color=C["text"])
@@ -489,13 +521,14 @@ def gen_fig3_exp_c_vs_d():
         if len(task_short) > 30:
             task_short = task_short[:27] + "..."
         ax.set_title(f"{task_short}\n({c_traj['quality_label']})",
-                      fontsize=8, pad=3, color=C["text"])
+                      fontsize=FS["grid_title"], pad=3, color=C["text"])
         ax.set_ylim(-0.1, 1.1)
+        ax.tick_params(labelsize=FS["grid_tick"])
         style_ax(ax)
         if i >= cols:
-            ax.set_xlabel("Frame", fontsize=10)
+            ax.set_xlabel("Frame", fontsize=FS["grid_label"])
         if i % cols == 0:
-            ax.set_ylabel("Progress", fontsize=10)
+            ax.set_ylabel("Progress", fontsize=FS["grid_label"])
 
     for j in range(i + 1, len(axes)):
         axes[j].axis("off")
@@ -505,7 +538,7 @@ def gen_fig3_exp_c_vs_d():
         plt.Line2D([0], [0], color=C["exp_d_stroke"], lw=2.5, linestyle="--",
                     label="Supervised Oracle"),
     ]
-    fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=12,
+    fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=FS["legend"],
                bbox_to_anchor=(0.5, 1.03), framealpha=0.9, edgecolor=C["spine"])
     fig.suptitle("Progress Predictions: Ours vs Supervised Oracle on Same Trajectories",
                   fontsize=FONT_SIZE, y=1.06, color=C["text"])
@@ -538,10 +571,11 @@ def gen_fig3_exp_c_vs_d():
         if len(task_short) > 40:
             task_short = task_short[:37] + "..."
         ax.set_title(f"{task_short} ({c_traj['quality_label']})",
-                      fontsize=11, pad=5, color=C["text"])
+                      fontsize=FS["ax_title"], pad=5, color=C["text"])
         ax.set_ylim(-0.1, 1.1)
-        ax.set_xlabel("Frame Index", fontsize=12)
-        ax.set_ylabel("Progress" if i % 3 == 0 else "", fontsize=12)
+        ax.set_xlabel("Frame Index", fontsize=FS["ax_label"])
+        ax.set_ylabel("Progress" if i % 3 == 0 else "", fontsize=FS["ax_label"])
+        ax.tick_params(labelsize=FS["tick"])
         style_ax(ax)
 
     handles = [
@@ -551,7 +585,7 @@ def gen_fig3_exp_c_vs_d():
         plt.Line2D([0], [0], color=C["gt"], lw=1, linestyle=":", alpha=0.6,
                     label="Ground Truth"),
     ]
-    fig.legend(handles=handles, loc="upper center", ncol=3, fontsize=12,
+    fig.legend(handles=handles, loc="upper center", ncol=3, fontsize=FS["legend"],
                bbox_to_anchor=(0.5, 1.02), framealpha=0.9, edgecolor=C["spine"])
     plt.tight_layout()
     out_path = OUT_DIR / "fig3_exp_c_vs_d_v2.pdf"
@@ -588,7 +622,7 @@ def gen_fig4_bar_chart():
     method_fills   = [C["exp_c_fill"],   C["exp_d_fill"]]
     method_strokes = [C["exp_c_stroke"], C["exp_d_stroke"]]
     x = np.arange(len(methods))
-    width = 0.5
+    width = 0.35
 
     for ax_idx, (title, section, key) in enumerate(metric_configs):
         ax = axes[ax_idx]
@@ -603,11 +637,11 @@ def gen_fig4_bar_chart():
             ax.text(bar.get_x() + bar.get_width() / 2,
                     bar.get_height() + y_off,
                     f"{val:.3f}", ha="center", va="bottom",
-                    fontsize=11, fontweight="bold", color=C["annot"])
+                    fontsize=FS["bar_annot"], fontweight="bold", color=C["annot"])
 
-        ax.set_title(title, fontsize=13, pad=8, color=C["text"])
+        ax.set_title(title, fontsize=FS["ax_title"], pad=8, color=C["text"])
         ax.set_xticks(x)
-        ax.set_xticklabels(methods, fontsize=12)
+        ax.set_xticklabels(methods, fontsize=FS["tick"])
         style_ax(ax)
 
     fig.suptitle("LIBERO-90: Ours (BT+MaxEnt) vs Supervised Oracle",
@@ -635,7 +669,7 @@ def gen_fig4_bar_chart():
         sections = ["reward_alignment", "policy_ranking", "policy_ranking"]
 
         x = np.arange(len(metric_names))
-        w = 0.3
+        w = 0.28
         method_meta = [
             (metrics_c, "Ours (BT+MaxEnt)", C["exp_c_fill"], C["exp_c_stroke"]),
             (metrics_d, "Supervised Oracle", C["exp_d_fill"], C["exp_d_stroke"]),
@@ -645,22 +679,22 @@ def gen_fig4_bar_chart():
             for sec, key in zip(sections, metric_keys):
                 vals.append(m_data.get(sec, {}).get(key, 0))
             offset = (mi - 0.5) * w
-            bars = ax.bar(x + offset, vals, w * 0.9, label=m_label,
+            bars = ax.bar(x + offset, vals, w * 0.85, label=m_label,
                           color=m_fill, edgecolor=m_stroke, linewidth=1.0, alpha=0.9)
             for bar, val in zip(bars, vals):
                 ax.text(bar.get_x() + bar.get_width() / 2,
                         bar.get_height() + 0.01,
                         f"{val:.2f}", ha="center", va="bottom",
-                        fontsize=9, color=C["annot"])
+                        fontsize=FS["bar_annot"], color=C["annot"])
 
-        ax.set_title(dataset_label, fontsize=14, pad=8, color=C["text"])
+        ax.set_title(dataset_label, fontsize=FS["ax_title"], pad=8, color=C["text"])
         ax.set_xticks(x)
-        ax.set_xticklabels(metric_names, fontsize=11)
+        ax.set_xticklabels(metric_names, fontsize=FS["tick"])
         ax.set_ylim(-0.2, 1.15)
         ax.axhline(y=0, color=C["grid"], linewidth=0.5)
         style_ax(ax)
         if ax_idx == 0:
-            ax.legend(fontsize=11, framealpha=0.9, edgecolor=C["spine"])
+            ax.legend(fontsize=FS["legend"], framealpha=0.9, edgecolor=C["spine"])
 
     fig.suptitle("Reward Model Evaluation: Ours vs Supervised Oracle",
                   fontsize=FONT_SIZE, y=1.02, color=C["text"])
@@ -706,17 +740,17 @@ def gen_fig4_bar_chart():
                 strokes.append(stroke)
                 labels.append(label)
 
-            bars = ax.bar(x, vals, 0.55, color=fills,
+            bars = ax.bar(x, vals, 0.45, color=fills,
                           edgecolor=strokes, linewidth=1.2)
             for bar, val in zip(bars, vals):
                 y_off = 0.02 * max(abs(v) for v in vals) if vals else 0
                 ax.text(bar.get_x() + bar.get_width() / 2,
                         bar.get_height() + y_off,
                         f"{val:.3f}", ha="center", va="bottom",
-                        fontsize=11, fontweight="bold", color=C["annot"])
-            ax.set_title(title, fontsize=13, pad=8, color=C["text"])
+                        fontsize=FS["bar_annot"], fontweight="bold", color=C["annot"])
+            ax.set_title(title, fontsize=FS["ax_title"], pad=8, color=C["text"])
             ax.set_xticks(x)
-            ax.set_xticklabels(labels, fontsize=10)
+            ax.set_xticklabels(labels, fontsize=FS["tick"])
             ax.axhline(y=0, color=C["grid"], linewidth=0.5)
             style_ax(ax)
 
@@ -798,16 +832,17 @@ def gen_fig5_training_dynamics():
             smoothed = smooth(values, weight=0.8)
             ax.plot(steps, smoothed, color=C["exp_c_stroke"], linewidth=2.5,
                     label="Ours")
-        ax.set_title(tag, fontsize=13, pad=6, color=C["text"])
-        ax.set_xlabel("Training Step", fontsize=12)
-        ax.set_ylabel(ylabel, fontsize=12)
+        ax.set_title(tag, fontsize=FS["ax_title"], pad=6, color=C["text"])
+        ax.set_xlabel("Training Step", fontsize=FS["ax_label"])
+        ax.set_ylabel(ylabel, fontsize=FS["ax_label"])
+        ax.tick_params(labelsize=FS["tick"])
         style_ax(ax)
 
     if "Struct Loss" in c_data:
         axes[1].axhline(y=-np.log(7), color=C["fail_stroke"], linestyle="--",
                         linewidth=1, alpha=0.6,
                         label=r"Saturation: $-\ln(7)$")
-        axes[1].legend(fontsize=10, framealpha=0.9, edgecolor=C["spine"])
+        axes[1].legend(fontsize=FS["legend"], framealpha=0.9, edgecolor=C["spine"])
 
     fig.suptitle("Ours (BT+MaxEnt) Training Dynamics (SmolVLM-500M)",
                   fontsize=FONT_SIZE, y=1.01, color=C["text"])
@@ -833,9 +868,10 @@ def gen_fig5_training_dynamics():
             ax.plot(steps, values, color=C["exp_d_fill"], linewidth=0.8)
             smoothed = smooth(values, weight=0.8)
             ax.plot(steps, smoothed, color=C["exp_d_stroke"], linewidth=2.5)
-        ax.set_title(tag, fontsize=13, pad=6, color=C["text"])
-        ax.set_xlabel("Training Step", fontsize=12)
-        ax.set_ylabel(ylabel, fontsize=12)
+        ax.set_title(tag, fontsize=FS["ax_title"], pad=6, color=C["text"])
+        ax.set_xlabel("Training Step", fontsize=FS["ax_label"])
+        ax.set_ylabel(ylabel, fontsize=FS["ax_label"])
+        ax.tick_params(labelsize=FS["tick"])
         style_ax(ax)
 
     fig.suptitle("Supervised Oracle Training Dynamics (SmolVLM-500M)",
@@ -859,9 +895,10 @@ def gen_fig5_training_dynamics():
                 ax.plot(steps, values, color=fill, linewidth=0.6)
                 smoothed = smooth(values, weight=0.8)
                 ax.plot(steps, smoothed, color=stroke, linewidth=2.5, label=exp_name)
-        ax.set_title(tag, fontsize=14, pad=6, color=C["text"])
-        ax.set_xlabel("Training Step", fontsize=12)
-        ax.legend(fontsize=10, framealpha=0.9, edgecolor=C["spine"])
+        ax.set_title(tag, fontsize=FS["ax_title"], pad=6, color=C["text"])
+        ax.set_xlabel("Training Step", fontsize=FS["ax_label"])
+        ax.tick_params(labelsize=FS["tick"])
+        ax.legend(fontsize=FS["legend"], framealpha=0.9, edgecolor=C["spine"])
         style_ax(ax)
 
     fig.suptitle("Training Comparison: Ours vs Supervised Oracle (SmolVLM-500M)",
@@ -893,13 +930,14 @@ def gen_fig5_training_dynamics():
         ax2.axhline(y=-np.log(7), color=C["fail_stroke"], linestyle="--",
                      linewidth=1, alpha=0.5)
         ax2.text(steps[-1] * 0.7, -np.log(7) + 0.03,
-                 r"Saturation: $-\ln(7)$", fontsize=9,
+                 r"Saturation: $-\ln(7)$", fontsize=FS["tick"],
                  color=C["fail_stroke"], alpha=0.8)
 
-    ax1.set_xlabel("Training Step", fontsize=14)
-    ax1.set_ylabel(r"$\mathcal{L}_{BT}$ (Preference Loss)", fontsize=14,
+    ax1.set_xlabel("Training Step", fontsize=FS["ax_label"])
+    ax1.set_ylabel(r"$\mathcal{L}_{BT}$ (Preference Loss)", fontsize=FS["ax_label"],
                     color=C["exp_c_stroke"])
-    ax2.set_ylabel(r"$\mathcal{L}_{struct}$ (Entropy Loss)", fontsize=14,
+    ax1.tick_params(labelsize=FS["tick"])
+    ax2.set_ylabel(r"$\mathcal{L}_{struct}$ (Entropy Loss)", fontsize=FS["ax_label"],
                     color=C["struct_stroke"])
     ax1.spines["top"].set_visible(False)
     ax2.spines["top"].set_visible(False)
@@ -911,7 +949,8 @@ def gen_fig5_training_dynamics():
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, fontsize=12, loc="upper right",
+    ax2.tick_params(labelsize=FS["tick"])
+    ax1.legend(lines1 + lines2, labels1 + labels2, fontsize=FS["legend"], loc="upper right",
                framealpha=0.9, edgecolor=C["spine"])
 
     fig.suptitle("Ours (BT+MaxEnt): Joint Loss Training Dynamics",
@@ -972,12 +1011,12 @@ def gen_fig6_confusion_matrix():
                     yticklabels=task_labels_short,
                     cbar_kws={"label": "Avg Predicted Reward"},
                     linewidths=0.5, linecolor=C["grid"])
-        ax.set_xlabel("Task", fontsize=12)
-        ax.set_ylabel("Task", fontsize=12)
-        plt.xticks(rotation=45, ha="right", fontsize=8)
-        plt.yticks(rotation=0, fontsize=8)
+        ax.set_xlabel("Task", fontsize=FS["ax_label"])
+        ax.set_ylabel("Task", fontsize=FS["ax_label"])
+        plt.xticks(rotation=45, ha="right", fontsize=FS["grid_tick"])
+        plt.yticks(rotation=0, fontsize=FS["grid_tick"])
 
-        fig.suptitle(f"Reward Heatmap: {exp_label}", fontsize=14, y=1.02,
+        fig.suptitle(f"Reward Heatmap: {exp_label}", fontsize=FS["ax_title"], y=1.02,
                       color=C["text"])
         plt.tight_layout()
         out_path = OUT_DIR / f"fig6_confusion_matrix_v{variant_idx + 1}.pdf"
@@ -1016,16 +1055,17 @@ def gen_fig6_confusion_matrix():
                 task_labels.append(task[:20] + "..." if len(task) > 20 else task)
 
         x = np.arange(len(task_labels))
-        w = 0.35
+        w = 0.30
         ax.bar(x - w / 2, succ_rewards, w, label="Successful",
                color=C["succ_fill"], edgecolor=C["succ_stroke"], linewidth=0.8)
         ax.bar(x + w / 2, fail_rewards, w, label="Failed",
                color=C["fail_fill"], edgecolor=C["fail_stroke"], linewidth=0.8)
         ax.set_xticks(x)
-        ax.set_xticklabels(task_labels, rotation=45, ha="right", fontsize=8)
-        ax.set_title(exp_label, fontsize=13, color=C["text"])
-        ax.set_ylabel("Avg Predicted Reward", fontsize=11)
-        ax.legend(fontsize=10, framealpha=0.9, edgecolor=C["spine"])
+        ax.set_xticklabels(task_labels, rotation=45, ha="right",
+                           fontsize=FS["grid_tick"])
+        ax.set_title(exp_label, fontsize=FS["ax_title"], color=C["text"])
+        ax.set_ylabel("Avg Predicted Reward", fontsize=FS["ax_label"])
+        ax.legend(fontsize=FS["legend"], framealpha=0.9, edgecolor=C["spine"])
         style_ax(ax)
 
     fig.suptitle("Reward Separation: Successful vs Failed per Task",
@@ -1080,13 +1120,13 @@ def gen_fig7_trajectory_frames():
                 for col, fi in enumerate(pick):
                     ax = fig.add_subplot(gs[row, col])
                     ax.imshow(frames[fi])
-                    ax.set_title(f"Frame {fi}", fontsize=9, color=C["text"])
+                    ax.set_title(f"Frame {fi}", fontsize=FS["grid_title"], color=C["text"])
                     ax.axis("off")
             else:
                 for col in range(4):
                     ax = fig.add_subplot(gs[row, col])
                     ax.text(0.5, 0.5, "N/A", ha="center", va="center",
-                            fontsize=14, color=C["text"])
+                            fontsize=FS["ax_label"], color=C["text"])
                     ax.axis("off")
 
             ax_plot = fig.add_subplot(gs[row, 4])
@@ -1094,10 +1134,12 @@ def gen_fig7_trajectory_frames():
             ax_plot.plot(range(len(progress)), progress,
                          color=stroke, linewidth=2.5)
             ax_plot.set_ylim(-0.1, 1.1)
-            ax_plot.set_ylabel("Progress", fontsize=11)
-            ax_plot.set_xlabel("Frame" if row == n_trajs - 1 else "", fontsize=11)
+            ax_plot.set_ylabel("Progress", fontsize=FS["ax_label"])
+            ax_plot.set_xlabel("Frame" if row == n_trajs - 1 else "",
+                               fontsize=FS["ax_label"])
+            ax_plot.tick_params(labelsize=FS["tick"])
             task_short = task if len(task) <= 40 else task[:37] + "..."
-            ax_plot.set_title(f"{task_short} ({ql})", fontsize=10, pad=4,
+            ax_plot.set_title(f"{task_short} ({ql})", fontsize=FS["ax_title"], pad=4,
                                color=C["text"])
             style_ax(ax_plot)
 
@@ -1188,10 +1230,11 @@ def gen_fig8_rl_success_rate():
             legend_entries.append(
                 plt.Line2D([0], [0], color=stroke, lw=2.5, label=run_label))
 
-        ax.set_xlabel("Training Steps", fontsize=14)
-        ax.set_ylabel("Eval Success Rate", fontsize=14)
+        ax.set_xlabel("Training Steps", fontsize=FS["ax_label"])
+        ax.set_ylabel("Eval Success Rate", fontsize=FS["ax_label"])
+        ax.tick_params(labelsize=FS["tick"])
         ax.set_ylim(-0.02, 1.05)
-        ax.legend(handles=legend_entries, fontsize=12, framealpha=0.9,
+        ax.legend(handles=legend_entries, fontsize=FS["legend"], framealpha=0.9,
                   edgecolor=C["spine"])
         style_ax(ax)
 
@@ -1228,10 +1271,11 @@ def gen_fig8_rl_success_rate():
                 plt.Line2D([0], [0], color=stroke, lw=2.5, label=label))
 
         if legend_entries:
-            ax.set_xlabel("Training Steps", fontsize=14)
-            ax.set_ylabel("Eval Success Rate", fontsize=14)
+            ax.set_xlabel("Training Steps", fontsize=FS["ax_label"])
+            ax.set_ylabel("Eval Success Rate", fontsize=FS["ax_label"])
+            ax.tick_params(labelsize=FS["tick"])
             ax.set_ylim(-0.02, 1.05)
-            ax.legend(handles=legend_entries, fontsize=12, framealpha=0.9,
+            ax.legend(handles=legend_entries, fontsize=FS["legend"], framealpha=0.9,
                       edgecolor=C["spine"])
             style_ax(ax)
             fig.suptitle("Policy Learning: BT+MaxEnt vs Sparse Reward (Task 28)",
