@@ -496,6 +496,18 @@ def gen_fig3_exp_c_vs_d():
     all_variants = []
     n_show = min(10, len(common_ids))
 
+    # Compute shared y-range from all displayed trajectories
+    all_progress_vals = []
+    for tid in common_ids[:n_show]:
+        all_progress_vals.extend(c_by_id[tid]["progress_pred"])
+        all_progress_vals.extend(d_by_id[tid]["progress_pred"])
+        if "target_progress" in c_by_id[tid] and c_by_id[tid]["target_progress"]:
+            all_progress_vals.extend(c_by_id[tid]["target_progress"])
+    g_ymin = min(all_progress_vals)
+    g_ymax = max(all_progress_vals)
+    g_ypad = (g_ymax - g_ymin) * 0.10
+    g_ylim = (g_ymin - g_ypad, g_ymax + g_ypad)
+
     # Variant 1: 2x5 grid
     cols = 5
     rows = (n_show + cols - 1) // cols
@@ -522,7 +534,7 @@ def gen_fig3_exp_c_vs_d():
             task_short = task_short[:27] + "..."
         ax.set_title(f"{task_short}\n({c_traj['quality_label']})",
                       fontsize=FS["grid_title"], pad=3, color=C["text"])
-        ax.set_ylim(-0.1, 1.1)
+        ax.set_ylim(*g_ylim)
         ax.tick_params(labelsize=FS["grid_tick"])
         style_ax(ax)
         if i >= cols:
@@ -572,7 +584,7 @@ def gen_fig3_exp_c_vs_d():
             task_short = task_short[:37] + "..."
         ax.set_title(f"{task_short} ({c_traj['quality_label']})",
                       fontsize=FS["ax_title"], pad=5, color=C["text"])
-        ax.set_ylim(-0.1, 1.1)
+        ax.set_ylim(*g_ylim)
         ax.set_xlabel("Frame Index", fontsize=FS["ax_label"])
         ax.set_ylabel("Progress" if i % 3 == 0 else "", fontsize=FS["ax_label"])
         ax.tick_params(labelsize=FS["tick"])
@@ -1105,6 +1117,18 @@ def gen_fig7_trajectory_frames():
         if not selected:
             break
 
+        # Compute shared y-range from ALL selected trajectories in this variant
+        all_vals = []
+        for traj in selected:
+            all_vals.extend(traj["progress_pred"])
+            if "target_progress" in traj and traj["target_progress"]:
+                all_vals.extend(traj["target_progress"])
+        y_min = min(all_vals)
+        y_max = max(all_vals)
+        y_pad = (y_max - y_min) * 0.12
+        y_lo = y_min - y_pad
+        y_hi = y_max + y_pad
+
         fig = plt.figure(figsize=(16, 4 * n_trajs))
         gs = GridSpec(n_trajs, 5, figure=fig, width_ratios=[1, 1, 1, 1, 2])
 
@@ -1133,7 +1157,7 @@ def gen_fig7_trajectory_frames():
             stroke = C["succ_stroke"] if ql == "successful" else C["fail_stroke"]
             ax_plot.plot(range(len(progress)), progress,
                          color=stroke, linewidth=2.5)
-            ax_plot.set_ylim(-0.1, 1.1)
+            ax_plot.set_ylim(y_lo, y_hi)
             ax_plot.set_ylabel("Progress", fontsize=FS["ax_label"])
             ax_plot.set_xlabel("Frame" if row == n_trajs - 1 else "",
                                fontsize=FS["ax_label"])
