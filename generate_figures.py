@@ -843,12 +843,19 @@ def gen_fig7_trajectory_frames():
         EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
     )
 
+    seen_tasks = set()
+    unique_task_trajs = []
+    for d in results_c:
+        if d["task"] not in seen_tasks:
+            seen_tasks.add(d["task"])
+            unique_task_trajs.append(d)
+
     all_variants = []
-    n_trajs = min(4, len(results_c))
+    n_trajs = min(4, len(unique_task_trajs))
 
     for variant_idx in range(2):
         start_idx = variant_idx * n_trajs
-        selected = results_c[start_idx:start_idx + n_trajs]
+        selected = unique_task_trajs[start_idx:start_idx + n_trajs]
         if not selected:
             break
 
