@@ -1318,6 +1318,92 @@ def gen_fig8_rl_success_rate():
 
 
 # ===================================================================
+# Figure 8-target: RL Learning Curves (from manual eval data)
+# ===================================================================
+def gen_fig8_rl_target():
+    """
+    Generate RL training curves with shaded seed-spread.
+    Data: 5 seeds x N eval checkpoints (every 20k steps).
+    Replace the placeholder arrays below with real success rates.
+    """
+
+    # --- Eval checkpoints (training steps) ---
+    steps = np.array([0, 20_000, 40_000, 60_000, 80_000])
+
+    # --- Success rates per seed  [seed0 … seed4] ---
+    # >>>  REPLACE with real data  <<<
+    sparse_seeds = np.array([
+        [0.00, 0.00, 0.10, 0.50, 0.55],   # seed 0
+        [0.00, 0.10, 0.15, 0.45, 0.70],   # seed 1
+        [0.00, 0.00, 0.35, 0.55, 0.75],   # seed 2
+        [0.00, 0.00, 0.20, 0.40, 0.60],   # seed 3
+        [0.00, 0.00, 0.28, 0.48, 0.44],   # seed 4
+    ])
+
+    bt_maxent_seeds = np.array([
+        [0.00, 0.00, 0.40, 0.50, 0.70],   # seed 0
+        [0.00, 0.15, 0.15, 0.60, 1.00],   # seed 1
+        [0.00, 0.06, 0.55, 0.80, 0.95],   # seed 2
+        [0.00, 0.10, 0.48, 0.72, 0.70],   # seed 3
+        [0.00, 0.15, 0.50, 0.78, 1.00],   # seed 4
+    ])
+
+    # --- Plotting config ---
+    configs = [
+        {
+            "label": "Sparse Reward",
+            "data": sparse_seeds,
+            "stroke": "#9E9E9E",
+            "fill": "#D5D5D5",
+        },
+        {
+            "label": "BT+Ent",
+            "data": bt_maxent_seeds,
+            "stroke": "#6DAFC2",
+            "fill": "#BFDCE7",
+        },
+    ]
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+
+    for cfg in configs:
+        data = cfg["data"]                  # (n_seeds, n_steps)
+        mean = data.mean(axis=0)
+        lo   = data.min(axis=0)
+        hi   = data.max(axis=0)
+
+        ax.fill_between(steps, lo, hi,
+                         color=cfg["fill"], alpha=0.45)
+        ax.plot(steps, mean, color=cfg["stroke"], linewidth=2.5,
+                label=cfg["label"], marker='o', markersize=4)
+
+    ax.set_xlabel("Training Steps", fontsize=FS["ax_label"])
+    ax.set_ylabel("Eval Success Rate", fontsize=FS["ax_label"])
+    ax.tick_params(labelsize=FS["tick"])
+    ax.set_xlim(-2000, steps[-1] + 2000)
+    ax.set_ylim(-0.02, 1.05)
+    ax.set_xticks(steps)
+    ax.set_xticklabels([f"{int(s // 1000)}k" if s > 0 else "0"
+                         for s in steps])
+
+    ax.legend(fontsize=FS["legend"], framealpha=0.9,
+              edgecolor=C["spine"], loc="upper left")
+    style_ax(ax)
+    plt.tight_layout()
+
+    out_path = OUT_DIR / "rl_target_curve.pdf"
+    fig.savefig(out_path, bbox_inches="tight", dpi=200)
+
+    out_png = OUT_DIR / "rl_target_curve.png"
+    fig.savefig(out_png, bbox_inches="tight", dpi=200)
+
+    plt.close(fig)
+    print(f"  [Fig8-target] Saved {out_path}")
+    print(f"  [Fig8-target] Saved {out_png}")
+    return [out_path, out_png]
+
+
+# ===================================================================
 # Main
 # ===================================================================
 def main():
@@ -1354,6 +1440,9 @@ def main():
 
     print("\n--- Figure 8: RL Success Rate ---")
     results["fig8"] = gen_fig8_rl_success_rate()
+
+    print("\n--- Figure 8-target: RL Target Curve (manual eval) ---")
+    results["fig8t"] = gen_fig8_rl_target()
 
     print("\n" + "=" * 60)
     print("ALL FIGURES GENERATED")
