@@ -111,8 +111,15 @@ def gen_fig1_libero_overview():
     successful = [d for d in data if d["quality_label"] == "successful"]
     successful.sort(key=lambda x: x["task"])
 
-    n_tasks = min(8, len(successful))
-    selected = successful[:n_tasks]
+    seen_tasks = set()
+    unique_task_trajs = []
+    for d in successful:
+        if d["task"] not in seen_tasks:
+            seen_tasks.add(d["task"])
+            unique_task_trajs.append(d)
+
+    n_tasks = min(8, len(unique_task_trajs))
+    selected = unique_task_trajs[:n_tasks]
 
     cols = 4
     rows = (n_tasks + cols - 1) // cols
