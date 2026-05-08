@@ -229,33 +229,55 @@ def gen_fig2_progress_curves():
         all_variants.append(out_path)
         print(f"  [Fig2 v{variant_idx+1}] Saved {out_path}")
 
-    # Variant 3: per-frame progress curves from reward_alignment results
+    # Variant 3: per-frame progress curves from policy_ranking results (has both successful + failure)
     results_ra = load_json(
-        EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "reward_alignment" / "libero_90_libero_90_failure_results.json"
+        EVAL_OUT / "rbm_exp_c_dirfix_v1_checkpoint-1000" / "policy_ranking" / "libero_90_libero_90_failure_results.json"
     )
     # Group by task
     task_to_trajs = defaultdict(list)
     for d in results_ra:
         task_to_trajs[d["task"]].append(d)
 
-    fig, axes = plt.subplots(2, 5, figsize=(20, 7))
+    sorted_tasks = sorted(task_to_trajs.keys())
+    n_tasks_show = min(10, len(sorted_tasks))
+    cols = min(5, n_tasks_show)
+    rows = (n_tasks_show + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, figsize=(4 * cols, 3.5 * rows))
+    if rows == 1 and cols == 1:
+        axes = np.array([axes])
     axes = axes.flatten()
-    for i, (task, trajs) in enumerate(sorted(task_to_trajs.items())[:10]):
+
+    max_trajs_per_label = 5
+    global_min = min(v for d in results_ra for v in d["progress_pred"])
+    global_max = max(v for d in results_ra for v in d["progress_pred"])
+    y_margin = (global_max - global_min) * 0.1
+    y_lo = global_min - y_margin
+    y_hi = global_max + y_margin
+
+    for i, task in enumerate(sorted_tasks[:n_tasks_show]):
         ax = axes[i]
-        for traj in trajs:
+        trajs = task_to_trajs[task]
+        succ = [t for t in trajs if t["quality_label"] == "successful"][:max_trajs_per_label]
+        fail = [t for t in trajs if t["quality_label"] == "failure"][:max_trajs_per_label]
+        for traj in fail:
             pp = traj["progress_pred"]
-            color = COLORS["successful"] if traj["quality_label"] == "successful" else COLORS["failure"]
-            label = traj["quality_label"]
-            ax.plot(range(len(pp)), pp, color=color, linewidth=2, alpha=0.8, label=label)
+            ax.plot(range(len(pp)), pp, color=COLORS["failure"], linewidth=2, alpha=0.7)
+        for traj in succ:
+            pp = traj["progress_pred"]
+            ax.plot(range(len(pp)), pp, color=COLORS["successful"], linewidth=2, alpha=0.7)
         task_short = task if len(task) <= 30 else task[:27] + "..."
         ax.set_title(task_short, fontsize=8, pad=3)
-        ax.set_ylim(-0.1, 1.1)
+        ax.set_ylim(y_lo, y_hi)
+        ax.axhline(y=0, color="gray", linewidth=0.5, alpha=0.4)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        if i >= 5:
+        if i >= cols:
             ax.set_xlabel("Frame", fontsize=10)
-        if i % 5 == 0:
+        if i % cols == 0:
             ax.set_ylabel("Progress", fontsize=10)
+
+    for j in range(i + 1, len(axes)):
+        axes[j].axis("off")
 
     handles = [
         plt.Line2D([0], [0], color=COLORS["successful"], lw=2, label="Successful"),
